@@ -132,6 +132,28 @@ get_fastf1_version <- function() {
   return(list(major = major, minor = minor))
 }
 
+#' Check FastF1 Session is Loaded
+#'
+#' @description Sometimes fastf1 sessions fail to load. This function tests the session to check that it's loaded,
+#' and if not tries to run `session.load()` again.
+#'
+#' @param session_name The name of the session you wish to test. Usually 'session'.
+#'
+#' @return invisibly `TRUE` after verifying FastF1 session is loaded.
+check_ff1_session_loaded <- function(session_name = 'session'){
+  tryCatch(
+    {
+      # Only returns a value if session.load() has been successful
+      # If it hasn't, retry
+      reticulate::py_run_string(glue::glue("{session}.t0_date", session = session_name))
+    },
+    error = function(e) {
+      reticulate::py_run_string(glue::glue("{session}.load()", session = session_name))
+    }
+  )
+  invisible(TRUE)
+}
+
 # nocov start
 
 #' Setup fastf1 connection
@@ -177,5 +199,4 @@ dummy <- function() {
     tidyr::drop_na()
   invisible(NULL)
 }
-
 # nocov end

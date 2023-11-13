@@ -32,22 +32,9 @@ load_session_laps <- function(season = get_current_season(), round = 1, session 
     round <- race
   }
 
-  if (get_fastf1_version()$major < 3) {
-    cli::cli_alert_warning("An old version of FastF1 is in use. Additional data is provided if using FastF1 v3.0.0 or later.")
-  }
-
   load_race_session(obj_name = "session", season = season, round = round, session = session, log_level = log_level)
 
-  tryCatch(
-    {
-      # Only returns a value if session.load() has been successful
-      # If it hasn't, retry
-      reticulate::py_run_string("session.t0_date")
-    },
-    error = function(e) {
-      reticulate::py_run_string("session.load()")
-    }
-  )
+  check_ff1_session_loaded(session_name = "session")
 
   reticulate::py_run_string("laps = session.laps")
   if (add_weather) {

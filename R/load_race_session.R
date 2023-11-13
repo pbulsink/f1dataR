@@ -41,8 +41,6 @@ load_race_session <- function(obj_name = "session", season = get_current_season(
   }
   if (season != "current" && (season < 2018 || season > get_current_season())) {
     cli::cli_abort('{.var season} must be between 2018 and {get_current_season()} (or use "current")')
-    # stop(glue::glue('Year must be between 2018 and {current} (or use "current")',
-    #                 current = get_current_season()))
   }
   if (!(session %in% c("FP1", "FP2", "FP3", "Q", "R", "S", "SS"))) {
     cli::cli_abort('{.var session} must be one of "FP1", "FP2", "FP3", "Q", "SS", "S", or "R"')
@@ -69,10 +67,7 @@ load_race_session <- function(obj_name = "session", season = get_current_season(
   }
 
   reticulate::py_run_string("import fastf1")
-  if (get_fastf1_version()$major >= 3) {
-    reticulate::py_run_string(glue::glue("fastf1.set_log_level('{log_level}')", log_level = log_level))
-  }
-
+  reticulate::py_run_string(glue::glue("fastf1.set_log_level('{log_level}')", log_level = log_level))
   reticulate::py_run_string(glue::glue("fastf1.Cache.enable_cache('{cache_dir}')", cache_dir = f1datar_cache))
 
   py_string <- glue::glue("{name} = fastf1.get_session({season}, ", name = obj_name, season = season)
@@ -91,16 +86,7 @@ load_race_session <- function(obj_name = "session", season = get_current_season(
 
   session <- reticulate::py_run_string(glue::glue("{name}.load()", name = obj_name))
 
-  tryCatch(
-    {
-      # Only returns a value if session.load() has been successful
-      # If it hasn't, retry
-      reticulate::py_run_string("session.t0_date")
-    },
-    error = function(e) {
-      reticulate::py_run_string(glue::glue("{name}.load()", name = obj_name))
-    }
-  )
+  check_ff1_session_loaded(session_name = "name")
 
   invisible(session[obj_name])
 }
