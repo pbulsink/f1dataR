@@ -139,7 +139,7 @@ get_fastf1_version <- function() {
 #' @param session_name The name of the session you wish to test. Usually 'session'.
 #'
 #' @return invisibly `TRUE` after verifying FastF1 session is loaded.
-check_ff1_session_loaded <- function(session_name = 'session'){
+check_ff1_session_loaded <- function(session_name = "session") {
   tryCatch(
     {
       # Only returns a value if session.load() has been successful
