@@ -1,0 +1,418 @@
+---
+title: "Interpolating Telemetry Datapoints"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Interpolating Telemetry Datapoints}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  out.width = "100%",
+  fig.width = 7,
+  fig.height = 5,
+  fig.path = "interpolating_data-",
+  dpi = 300,
+  dev = "png"
+)
+knitr::knit_hooks$set(optipng = knitr::hook_optipng)
+withr::local_timezone("UTC")
+withr::local_options("f1dataR.cache" = "memory")
+```
+
+```{r setup}
+library(f1dataR)
+library(Hmisc)
+library(dplyr)
+library(tibble)
+library(ggplot2)
+```
+
+# Introduction
+
+This is an notebook version of a file originally put together by
+Santiago Cassanova for testing interpolation techniques for `FastF1`
+sourced F1 telemetry data.
+
+Currently, it's difficult to interpolate data accurately when looking at
+the telemetry data as that returned by the `f1dataR` package.
+
+# Data Preparation
+
+We'll start by prepping some test data for analysis
+
+```{r data}
+data <- f1dataR::load_driver_telemetry(2022, 1, driver = "LEC")
+
+# Get 100 observations to test
+split_inter <- data %>%
+  head(100) %>%
+  dplyr::select(distance, time)
+
+# Extract odd observations for testing
+test_inter <- split_inter[seq(1, 99, 2), ]
+```
+
+# Interpolation Techniques
+
+We'll look at some interpolation techniques next. Our standard metric
+will be to compare the integral difference versus that of the true
+values from `split_inter` as defined above. The 'true value' will be
+defined as:
+
+```{r true_itegral}
+# Approximate integral for "full" values
+integ_real <- integrate(
+  approxfun(split_inter$distance, split_inter$time),
+  range(split_inter$distance)[1],
+  range(split_inter$distance)[2]
+)
+```
+
+## Basic Interpolation
+
+As a baseline, we'll look at a basic before & after point linear
+interpolation:
+
+```{r basic}
+# Interpolate 100 observations from test data
+pred_inter <- approx(test_inter$distance, test_inter$time, n = 100)
+
+# Approximate integral for interpolated values
+integ_inter <- integrate(
+  approxfun(pred_inter$x, pred_inter$y),
+  range(pred_inter$x)[1],
+  range(pred_inter$x)[2]
+)
+
+# Integral difference
+integ_real$value - integ_inter$value
+```
+
+# Cross-Extrapolate
+
+An alternative method is to 'cross extrapolate' by which an interpolated
+value is made up of a combined left-extrapolation and
+right-extrapolation from each side of the data.
+
+```{r cross-extrapolate}
+# Cross extrapolation
+cross_extrapolate <- function(xleft, yleft, # Data to extrapolate from the left
+                              xright, yright, # Data to extrapolate from the right
+                              nout = 1) { # Number of points to extrapolate
+  # Get step size to extrapolate
+  interval <- mean(xleft - dplyr::lag(xleft), na.rm = T)
+  # Step to the right
+  xout_vec_l <- rep(xleft[length(xleft)] + interval, nout)
+  # Step to the left
+  xout_vec_r <- rep(xright[1] - interval, nout)
+  # Conduct extrapolation from the left
+  left_extrap <-
+    Hmisc::approxExtrap(xleft, yleft, xout = xout_vec_l)
+  # Conduct extrapolation from the right
+  right_extrap <-
+    Hmisc::approxExtrap(xright, yright, xout = xout_vec_r)
+  # weighted mean for both x and y values, weighted by observations on each side
+  x_out <- weighted.mean(c(left_extrap$x, right_extrap$x), c(length(xleft), length(xright)))
+  y_out <- weighted.mean(c(left_extrap$y, right_extrap$y), c(length(xleft), length(xright)))
+  tibble::tibble(x = x_out, y = y_out)
+}
+
+# run the cross extrapolation iteratively through the test obsevations
+cross_extrap <- tibble(distance = numeric(0), time = numeric(0))
+for (i in 3:(nrow(test_inter) - 3)) {
+  left <- test_inter[1:i, ]
+  right <- test_inter[i:nrow(test_inter), ]
+  extrap <- cross_extrapolate(left$distance, left$time, right$distance, right$time) %>%
+    rename(distance = x, time = y)
+  cross_extrap <- bind_rows(cross_extrap, extrap)
+}
+
+cross_extrapolated <- bind_rows(test_inter, cross_extrap) %>%
+  arrange(distance)
+
+# Approximate the integral for the cross-extrapolated values
+integ_extrap <- integrate(
+  approxfun(cross_extrapolated$distance, cross_extrapolated$time),
+  range(cross_extrapolated$distance)[1],
+  range(cross_extrapolated$distance)[2]
+)
+
+# Integral difference
+integ_extrap$value - integ_inter$value
+```
+
+# Graphical Exploration
+
+Let's step back and do some graphical exploration of these techniques.
+We'll start with some very synthetic data simulating what it might look
+like for speed or RPM as you enter a braking zone:
+
+```{r synthetic_data}
+gdata <- data[data$distance > 500 & data$distance < 650, c("distance", "speed")]
+gdata$x <- round(gdata$distance, 1)
+gdata$y <- gdata$speed
+
+gdata <- gdata[, c("x", "y")]
+
+baseplot <- ggplot2::ggplot(gdata, ggplot2::aes(x = x, y = y)) +
+  ggplot2::geom_point(color = "white") +
+  ggplot2::labs(
+    x = "Lap Distance (m)",
+    y = "Speed (km/h)"
+  ) +
+  f1dataR::theme_dark_f1(axis_marks = TRUE)
+
+baseplot + ggplot2::ggtitle("Speed at Distance Around Lap")
+```
+
+We can see a few things:
+
+-   There's jitter in the provided data for what would be expected to be
+    a relatively smooth trace.
+
+-   The points are not evenly spaced - indeed, there's actually two
+    points at 507 meters!
+
+## Linear Interpolation
+
+Interpolated linear data will look like this:
+
+```{r interpolated_linear}
+baseplot + ggplot2::geom_line(color = "red") + ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Linear interpolated")
+```
+
+## Built-in Model-based Interpolation
+
+We can switch to a `loess` or \`spline interpolation to help smooth the
+function between the points:
+
+```{r loess_interp}
+lfit <- loess(y ~ x, gdata)
+ldata <- data.frame(x = seq(min(as.integer(gdata$x)), max(as.integer(gdata$x))))
+ldata$y <- predict(lfit, newdata = ldata$x)
+sfit <- smooth.spline(x = gdata$x, y = gdata$y)
+sdata <- data.frame(x = seq(min(as.integer(gdata$x)), max(as.integer(gdata$x))))
+sdata$y <- predict(sfit, x = sdata$x)$y
+
+interplot <- baseplot +
+  ggplot2::geom_line(color = "red") +
+  ggplot2::geom_line(data = ldata, aes(x = x, y = y), color = "lightblue") +
+  ggplot2::geom_line(data = sdata, aes(x = x, y = y), color = "lightgreen")
+
+interplot + ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = Loess, Green = Splines, Red = Linear")
+```
+
+There's clearly advantages to each technique:
+
+-   splines and linear interpolation exactly hit each known data point,
+    whereas loess misses and smooths everything
+
+-   loess is more "in-control" near trend change events (such as the
+    start of the breaking point at about 580 m), whereas splines suffers
+    from some extreme overestimation of the speed before that point
+
+## Original Cross-Extrapolation
+
+We'll rerun the cross extrapolation for speed, and see how it looks:
+
+```{r cross_speed}
+split_inter <- data %>%
+  head(100) %>%
+  dplyr::select(distance, speed)
+
+# Extract odd observations for testing
+test_inter <- split_inter[seq(1, 99, 2), ]
+
+speed_extrap <- tibble(distance = numeric(0), speed = numeric(0))
+for (i in 3:(nrow(test_inter) - 3)) {
+  left <- test_inter[1:i, ]
+  right <- test_inter[i:nrow(test_inter), ]
+  extrap <- cross_extrapolate(left$distance, left$speed, right$distance, right$speed) %>%
+    rename(distance = x, speed = y)
+  speed_extrap <- bind_rows(speed_extrap, extrap)
+}
+
+speed_extrapolated <- bind_rows(test_inter, speed_extrap) %>%
+  arrange(distance) %>%
+  filter(distance > 500 & distance < 650)
+
+interplot +
+  geom_line(data = speed_extrapolated, aes(x = distance, y = speed), color = "yellow") +
+  ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = Loess, Green = Splines, Red = Linear, Yellow = CrossExt")
+```
+
+Hmm that produces some interesting results, even if we remember that
+it's just producing data to predict the every-other point which was
+removed.
+
+# Cross Extrapolation
+
+Let's rewrite the cross-extrapolation with some changes to implement
+now, and a few more in mind for future:
+
+1.  The first thing to do is be able to interpolate at any given point
+    of 'x'. (CHECK)
+
+2.  The left and right extrapolations should be weighted on how close
+    they are to an existing point (left or right) and not on the number
+    of points provided. (CHECK)
+
+3.  Extrapolations should easily switch from linear best fits to
+    quadratic and cubic (or auto between the three for best fit?), (and
+    possibly also `loess` or `spline`)? (CHECK partial)
+
+4.  Eventually should auto-detect binary type data (0/1) for
+    Brake/DRS/etc and, instead of returning a fractional mixed average
+    if interpolating cutoff, round to nearest value (likely not great
+    for detailed work but better than Brake = 1/3). (FUTURE)
+
+5.  Could fall back from cubic/quadratic to linear (or even
+    single-point) for left or right edge cases while using the selected
+    polynomic degree for. (FUTURE)
+
+```{r new_cross}
+cross_extrapolate <- function(x, y, new_x, curve_type = "linear", points = 2) {
+  # x must be ordered
+  stopifnot(!is.unsorted(x))
+
+  # Only interpolate in x
+  stopifnot(new_x > range(x, na.rm = T)[1] & new_x < range(x, na.rm = T)[2])
+  stopifnot(length(x) == length(y))
+
+  # have enough data points
+  if (curve_type == "linear") {
+    stopifnot(points >= 2)
+  } else if (curve_type == "quadratic") {
+    stopifnot(points >= 3)
+  } else if (curve_type == "cubic") {
+    stopifnot(points >= 4)
+  }
+
+  leftx <- x[x < new_x]
+  stopifnot(length(leftx) >= points)
+  lefty <- head(y, length(leftx))
+
+  leftx <- tail(leftx, points)
+  lefty <- tail(lefty, points)
+
+  rightx <- x[x > new_x]
+  stopifnot(length(rightx) >= points)
+  righty <- tail(y, length(rightx))
+
+  rightx <- head(rightx, points)
+  righty <- head(righty, points)
+
+  if (curve_type == "linear") {
+    leftfit <- lm(lefty ~ leftx)
+    rightfit <- lm(righty ~ rightx)
+
+    left_est <- predict(leftfit, newdata = list(leftx = new_x))
+    right_est <- predict(rightfit, newdata = list(rightx = new_x))
+  } else if (curve_type == "quadratic") {
+    leftx2 <- leftx^2
+    rightx2 <- rightx^2
+    leftfit <- lm(lefty ~ leftx + leftx2)
+    rightfit <- lm(righty ~ rightx + rightx2)
+
+    left_est <- predict(leftfit, newdata = list(leftx = new_x, leftx2 = new_x^2))
+    right_est <- predict(rightfit, newdata = list(rightx = new_x, rightx2 = new_x^2))
+  } else if (curve_type == "cubic") {
+    leftx2 <- leftx^2
+    leftx3 <- leftx^3
+    rightx2 <- rightx^2
+    rightx3 <- rightx^3
+    leftfit <- lm(lefty ~ leftx + leftx2 + leftx3)
+    rightfit <- lm(righty ~ rightx + rightx2 + rightx3)
+
+    left_est <- predict(leftfit, newdata = list(leftx = new_x, leftx2 = new_x^2, leftx3 = new_x^3))
+    right_est <- predict(rightfit, newdata = list(rightx = new_x, rightx2 = new_x^2, rightx3 = new_x^3))
+  }
+  
+  left_dist <- abs(new_x - max(leftx, na.rm = T))
+  right_dist <- abs(new_x - min(rightx, na.rm = T))
+
+  return(weighted.mean(c(left_est, right_est), w = c(1 / left_dist, 1 / right_dist)))
+}
+
+```
+
+With this function redesigned, we can plot its performance over our test data. We'll compare linear, quadratic and cubic versions.
+
+```{r new_cross_plot_linear}
+c_e <- Vectorize(cross_extrapolate, vectorize.args = 'new_x')
+lindata<-data.frame(x = seq(521, 633, by = 0.1))
+lindata$liny2<-c_e(gdata$x, gdata$y, new_x = lindata$x, curve_type = 'linear', points = 2)
+
+quaddata<-data.frame(x = seq(525, 626, by = 0.1))
+quaddata$quady3<-c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = 'quadratic', points = 3)
+quaddata$liny3<-c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = 'linear', points = 3)
+
+cubdata<-data.frame(x = seq(541, 622, byu = 0.1))
+cubdata$cubic4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'cubic', points = 4)
+cubdata$liny4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'linear', points = 4)
+cubdata$quady4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'quadratic', points = 4)
+
+baseplot + 
+  ggplot2::geom_line(data = lindata, aes(x = x, y = liny2), color = 'lightblue') +
+  ggplot2::geom_line(data = quaddata, aes(x = x, y = liny3), color = 'lightgreen') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = liny4), color = 'yellow') +
+  ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = 2-point Linear, Green = 3-point Linear, Yellow = 4-point Linear")
+```
+
+```{r cross_quad_cubic}
+baseplot + 
+  ggplot2::geom_line(data = quaddata, aes(x = x, y = quady3), color = 'lightblue') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = quady4), color = 'lightgreen') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = cubic4), color = 'yellow')+
+  ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = 3-point Quad, Green = 4-point Quad, Yellow = 4-point Cubic")
+```
+The cubic looks to be very close to what we are searching for.
+
+Let's retry with higher order prediction. I have expanded the input data but will show the plot over the same area nonetheless:
+
+```{r cubic_expansion}
+cubdata<-data.frame(x = seq(500, 650, by = 0.1))
+cubdata$yq <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'quadratic', points = 5)
+cubdata$y4 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 4)
+cubdata$y5 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 5)
+cubdata$y6 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 6)
+cubdata$y7 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 7)
+cubdata$y8 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 8)
+cubdata$y9 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 9)
+
+baseplot + 
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = 'pink') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = 'orange') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y6), color = 'yellow') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = 'lightgreen') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y8), color = 'lightblue')+
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = 'purple') +
+  ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated")
+```
+
+The above plot follows the rainbow (red = quadratic 5 points, orange = cubic 5 points, yellow = cubic 6 points, lightgreen = 7 points, lightblue = 8 points, lightpurple = 9 points). Interestingly, more data points doesn't seem to be better, it seems to lock-in some over-confidence in the linearity of the curve at the major inflection point.
+
+Interestingly, `spline` has a built-in cubic smoothing function, we'll try that:
+```{r splinesmooth}
+spsmooth<-smooth.spline(data$distance, data$speed)
+loessmooth <- loess(y ~ x, data = data.frame(x = data$distance, y = data$speed), degree = 2, span = .01)
+
+cubdata$spy<-predict(spsmooth, cubdata$x)$y
+cubdata$ly<-predict(loessmooth, cubdata$x)
+
+baseplot + 
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = 'pink') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = spy), color = 'orange') + 
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = 'lightgreen') +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = ly), color = 'lightblue') +
+  ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "quadratic 4 pt. = pink / spline = orange / cubic 7 pt. = green / loess = blue")
+```
+
+
+# Derivatives?
+Is there a mechanism for understanding this better by predicting the derivative of the curve from each end?
+
