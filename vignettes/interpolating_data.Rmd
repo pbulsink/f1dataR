@@ -331,43 +331,42 @@ cross_extrapolate <- function(x, y, new_x, curve_type = "linear", points = 2) {
     left_est <- predict(leftfit, newdata = list(leftx = new_x, leftx2 = new_x^2, leftx3 = new_x^3))
     right_est <- predict(rightfit, newdata = list(rightx = new_x, rightx2 = new_x^2, rightx3 = new_x^3))
   }
-  
+
   left_dist <- abs(new_x - max(leftx, na.rm = T))
   right_dist <- abs(new_x - min(rightx, na.rm = T))
 
   return(weighted.mean(c(left_est, right_est), w = c(1 / left_dist, 1 / right_dist)))
 }
-
 ```
 
 With this function redesigned, we can plot its performance over our test data. We'll compare linear, quadratic and cubic versions.
 
 ```{r new_cross_plot_linear}
-c_e <- Vectorize(cross_extrapolate, vectorize.args = 'new_x')
-lindata<-data.frame(x = seq(521, 633, by = 0.1))
-lindata$liny2<-c_e(gdata$x, gdata$y, new_x = lindata$x, curve_type = 'linear', points = 2)
+c_e <- Vectorize(cross_extrapolate, vectorize.args = "new_x")
+lindata <- data.frame(x = seq(521, 633, by = 0.1))
+lindata$liny2 <- c_e(gdata$x, gdata$y, new_x = lindata$x, curve_type = "linear", points = 2)
 
-quaddata<-data.frame(x = seq(525, 626, by = 0.1))
-quaddata$quady3<-c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = 'quadratic', points = 3)
-quaddata$liny3<-c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = 'linear', points = 3)
+quaddata <- data.frame(x = seq(525, 626, by = 0.1))
+quaddata$quady3 <- c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = "quadratic", points = 3)
+quaddata$liny3 <- c_e(gdata$x, gdata$y, new_x = quaddata$x, curve_type = "linear", points = 3)
 
-cubdata<-data.frame(x = seq(541, 622, byu = 0.1))
-cubdata$cubic4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'cubic', points = 4)
-cubdata$liny4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'linear', points = 4)
-cubdata$quady4<-c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = 'quadratic', points = 4)
+cubdata <- data.frame(x = seq(541, 622, byu = 0.1))
+cubdata$cubic4 <- c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = "cubic", points = 4)
+cubdata$liny4 <- c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = "linear", points = 4)
+cubdata$quady4 <- c_e(gdata$x, gdata$y, new_x = cubdata$x, curve_type = "quadratic", points = 4)
 
-baseplot + 
-  ggplot2::geom_line(data = lindata, aes(x = x, y = liny2), color = 'lightblue') +
-  ggplot2::geom_line(data = quaddata, aes(x = x, y = liny3), color = 'lightgreen') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = liny4), color = 'yellow') +
+baseplot +
+  ggplot2::geom_line(data = lindata, aes(x = x, y = liny2), color = "lightblue") +
+  ggplot2::geom_line(data = quaddata, aes(x = x, y = liny3), color = "lightgreen") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = liny4), color = "yellow") +
   ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = 2-point Linear, Green = 3-point Linear, Yellow = 4-point Linear")
 ```
 
 ```{r cross_quad_cubic}
-baseplot + 
-  ggplot2::geom_line(data = quaddata, aes(x = x, y = quady3), color = 'lightblue') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = quady4), color = 'lightgreen') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = cubic4), color = 'yellow')+
+baseplot +
+  ggplot2::geom_line(data = quaddata, aes(x = x, y = quady3), color = "lightblue") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = quady4), color = "lightgreen") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = cubic4), color = "yellow") +
   ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated - Blue = 3-point Quad, Green = 4-point Quad, Yellow = 4-point Cubic")
 ```
 The cubic looks to be very close to what we are searching for.
@@ -375,22 +374,22 @@ The cubic looks to be very close to what we are searching for.
 Let's retry with higher order prediction. I have expanded the input data but will show the plot over the same area nonetheless:
 
 ```{r cubic_expansion}
-cubdata<-data.frame(x = seq(500, 650, by = 0.1))
-cubdata$yq <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'quadratic', points = 5)
-cubdata$y4 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 4)
-cubdata$y5 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 5)
-cubdata$y6 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 6)
-cubdata$y7 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 7)
-cubdata$y8 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 8)
-cubdata$y9 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = 'cubic', points = 9)
+cubdata <- data.frame(x = seq(500, 650, by = 0.1))
+cubdata$yq <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "quadratic", points = 5)
+cubdata$y4 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 4)
+cubdata$y5 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 5)
+cubdata$y6 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 6)
+cubdata$y7 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 7)
+cubdata$y8 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 8)
+cubdata$y9 <- c_e(data$distance, data$speed, new_x = cubdata$x, curve_type = "cubic", points = 9)
 
-baseplot + 
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = 'pink') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = 'orange') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y6), color = 'yellow') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = 'lightgreen') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y8), color = 'lightblue')+
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = 'purple') +
+baseplot +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = "pink") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = "orange") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y6), color = "yellow") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = "lightgreen") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y8), color = "lightblue") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y5), color = "purple") +
   ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "Interpolated")
 ```
 
@@ -398,17 +397,17 @@ The above plot follows the rainbow (red = quadratic 5 points, orange = cubic 5 p
 
 Interestingly, `spline` has a built-in cubic smoothing function, we'll try that:
 ```{r splinesmooth}
-spsmooth<-smooth.spline(data$distance, data$speed)
+spsmooth <- smooth.spline(data$distance, data$speed)
 loessmooth <- loess(y ~ x, data = data.frame(x = data$distance, y = data$speed), degree = 2, span = .01)
 
-cubdata$spy<-predict(spsmooth, cubdata$x)$y
-cubdata$ly<-predict(loessmooth, cubdata$x)
+cubdata$spy <- predict(spsmooth, cubdata$x)$y
+cubdata$ly <- predict(loessmooth, cubdata$x)
 
-baseplot + 
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = 'pink') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = spy), color = 'orange') + 
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = 'lightgreen') +
-  ggplot2::geom_line(data = cubdata, aes(x = x, y = ly), color = 'lightblue') +
+baseplot +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = yq), color = "pink") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = spy), color = "orange") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = y7), color = "lightgreen") +
+  ggplot2::geom_line(data = cubdata, aes(x = x, y = ly), color = "lightblue") +
   ggplot2::ggtitle(label = "Speed at Distance Around Lap", subtitle = "quadratic 4 pt. = pink / spline = orange / cubic 7 pt. = green / loess = blue")
 ```
 
