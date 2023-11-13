@@ -126,7 +126,7 @@ get_fastf1_version <- function() {
     lifecycle::deprecate_stop("1.5",
       what = I("fastf1 version < 3.1"), with = I("fastf1 version >= 3.1"),
     )
-    #cli::cli_inform("The Python package {.pgk fastf1} was updated to v3 recently.\nPlease update the version on your system by running:\n{.code setup_fastf1(newenv = TRUE)}\nFuture versions of {.pkg f1dataR} may not support {.pkg fastf1<3.0.0}.")
+    # cli::cli_inform("The Python package {.pgk fastf1} was updated to v3 recently.\nPlease update the version on your system by running:\n{.code setup_fastf1(newenv = TRUE)}\nFuture versions of {.pkg f1dataR} may not support {.pkg fastf1<3.0.0}.")
   }
   return(list(major = major, minor = minor))
 }
