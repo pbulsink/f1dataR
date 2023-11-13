@@ -111,7 +111,7 @@ time_to_sec <- function(time) {
 #' Gets the current installed FastF1 version available (via `reticulate`) to the function.
 #' Displays a note if significantly out of date.
 #' @export
-#' @return integer for major version number (or NA if any error )
+#' @return list with major version number and minor version number (or NA if any error)
 get_fastf1_version <- function() {
   ver <- reticulate::py_list_packages() %>%
     dplyr::filter(.data$package == "fastf1") %>%
@@ -123,11 +123,10 @@ get_fastf1_version <- function() {
   major <- as.integer(unlist(strsplit(ver, ".", fixed = T))[1])
   minor <- as.integer(unlist(strsplit(ver, ".", fixed = T))[2])
   if (major < 3 | (major == 3 & minor < 1)) {
-    lifecycle::deprecate_warn("1.4.1",
+    lifecycle::deprecate_stop("1.5",
       what = I("fastf1 version < 3.1"), with = I("fastf1 version >= 3.1"),
-      details = c("Hard deprecation will occur between 2023 and 2024 F1 seasons")
     )
-    cli::cli_inform("The Python package {.pgk fastf1} was updated to v3 recently.\nPlease update the version on your system by running:\n{.code setup_fastf1(newenv = TRUE)}\nFuture versions of {.pkg f1dataR} may not support {.pkg fastf1<3.0.0}.")
+    #cli::cli_inform("The Python package {.pgk fastf1} was updated to v3 recently.\nPlease update the version on your system by running:\n{.code setup_fastf1(newenv = TRUE)}\nFuture versions of {.pkg f1dataR} may not support {.pkg fastf1<3.0.0}.")
   }
   return(list(major = major, minor = minor))
 }
