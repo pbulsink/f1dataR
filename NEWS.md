@@ -1,5 +1,10 @@
 # f1dataR (development version)
 
+# f1dataR dev
+
+* Deprecated FastF1 support for versions < 3.1 (#198)
+* Improved internal error checking functions for FastF1 race sessions.
+
 # f1dataR 1.4.1
 
 * Fixed a bug with cache options (#194, #195, #197)
