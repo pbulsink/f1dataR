@@ -7,7 +7,11 @@ test_that("load session laps works", {
   # Note: The test suite can't delete the old fastf1_http_cache.sqlite file
   # because python's process has it locked.
   if (dir.exists(file.path(tempdir(), "tst_session_laps"))) {
-    unlink(file.path(tempdir(), "tst_session_laps"), recursive = TRUE, force = TRUE)
+    unlink(
+      file.path(tempdir(), "tst_session_laps"),
+      recursive = TRUE,
+      force = TRUE
+    )
   }
   withr::local_file(file.path(tempdir(), "tst_session_laps"))
   dir.create(file.path(tempdir(), "tst_session_laps"), recursive = TRUE)
@@ -24,9 +28,18 @@ test_that("load session laps works", {
   }
 
   laps <- load_session_laps(season = 2023, round = "bahrain")
-  laps2 <- load_session_laps(season = 2023, round = "bahrain", add_weather = TRUE)
+  laps2 <- load_session_laps(
+    season = 2023,
+    round = "bahrain",
+    add_weather = TRUE
+  )
   lapsq <- load_session_laps(season = 2023, round = "bahrain", session = "Q")
-  lapsqw <- load_session_laps(season = 2023, round = "bahrain", session = "Q", add_weather = TRUE)
+  lapsqw <- load_session_laps(
+    season = 2023,
+    round = "bahrain",
+    session = "Q",
+    add_weather = TRUE
+  )
   lapssq <- load_session_laps(season = 2024, round = "china", session = "SQ")
 
   expect_true("tbl" %in% class(laps))
@@ -41,11 +54,18 @@ test_that("load session laps works", {
   expect_true(!is.na(lapsq$time[1]))
   expect_equal(round(min(lapsq$lap_time, na.rm = TRUE)), round(89.708))
   expect_equal(nrow(lapsq), nrow(lapsqw))
-  expect_equal(min(lapsq$lap_time, na.rm = TRUE), min(lapsqw$lap_time, na.rm = TRUE))
+  expect_equal(
+    min(lapsq$lap_time, na.rm = TRUE),
+    min(lapsqw$lap_time, na.rm = TRUE)
+  )
   expect_lt(ncol(lapsq), ncol(lapsqw))
   expect_true("wind_speed" %in% colnames(lapsqw))
 
-  expect_error(load_session_laps(season = 2023, race = "bahrain", session = "Q"))
+  expect_error(load_session_laps(
+    season = 2023,
+    race = "bahrain",
+    session = "Q"
+  ))
 })
 
 test_that("Load Session Laps works without internet", {
@@ -56,15 +76,23 @@ test_that("Load Session Laps works without internet", {
   # Note: The test suite can't delete the old fastf1_http_cache.sqlite file
   # because python's process has it locked.
   if (dir.exists(file.path(tempdir(), "tst_session_laps2"))) {
-    unlink(file.path(tempdir(), "tst_session_laps2"), recursive = TRUE, force = TRUE)
+    unlink(
+      file.path(tempdir(), "tst_session_laps2"),
+      recursive = TRUE,
+      force = TRUE
+    )
   }
   withr::local_file(file.path(tempdir(), "tst_session_laps2"))
   dir.create(file.path(tempdir(), "tst_session_laps2"), recursive = TRUE)
-  withr::local_options(f1dataR.cache = file.path(tempdir(), "tst_session_laps2"))
+  withr::local_options(
+    f1dataR.cache = file.path(tempdir(), "tst_session_laps2")
+  )
 
   ff1_ver <- get_fastf1_version()
   if (ff1_ver < "3.1") {
-    skip("Skipping load_session_laps (no internet) test as FastF1 is out of date.")
+    skip(
+      "Skipping load_session_laps (no internet) test as FastF1 is out of date."
+    )
   }
 
   clear_cache()
@@ -75,7 +103,10 @@ test_that("Load Session Laps works without internet", {
     suppressWarnings({
       suppressMessages({
         httptest2::without_internet({
-          expect_message(load_session_laps(season = 2023, round = "bahrain"), "f1dataR: Can't connect to F1 Live Timing for FastF1 data download")
+          expect_message(
+            load_session_laps(season = 2023, round = "bahrain"),
+            "f1dataR: Can't connect to F1 Live Timing for FastF1 data download"
+          )
           expect_null(load_session_laps(season = 2023, round = "bahrain"))
         })
       })

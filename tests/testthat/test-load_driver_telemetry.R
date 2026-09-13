@@ -18,45 +18,97 @@ test_that("driver telemetry", {
   ff1_ver <- get_fastf1_version()
   if (ff1_ver < "3.1") {
     expect_error(
-      telem <- load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = "all"),
+      telem <- load_driver_telemetry(
+        season = 2023,
+        round = "Brazil",
+        session = "S",
+        driver = "HAM",
+        laps = "all"
+      ),
       "Skipping load_race_session as FastF1 is out of date."
     )
     skip("Skipping load_driver_telemetry tests as FastF1 is out of date.")
   }
 
-  telem <- load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = "all")
-  telem_fast <- load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = "fastest")
+  telem <- load_driver_telemetry(
+    season = 2023,
+    round = "Brazil",
+    session = "S",
+    driver = "HAM",
+    laps = "all"
+  )
+  telem_fast <- load_driver_telemetry(
+    season = 2023,
+    round = "Brazil",
+    session = "S",
+    driver = "HAM",
+    laps = "fastest"
+  )
 
   expect_true(nrow(telem) > nrow(telem_fast))
   expect_true(ncol(telem) == ncol(telem_fast))
 
   expect_equal(round(telem_fast$session_time[[1]]), round(3517.868))
 
-  telem_lap <- load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = 1)
+  telem_lap <- load_driver_telemetry(
+    season = 2023,
+    round = "Brazil",
+    session = "S",
+    driver = "HAM",
+    laps = 1
+  )
   expect_equal(telem_lap$time[[1]], 0)
   expect_equal(telem_lap$speed[[1]], 0)
   expect_error(
-    load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = 1.5),
+    load_driver_telemetry(
+      season = 2023,
+      round = "Brazil",
+      session = "S",
+      driver = "HAM",
+      laps = 1.5
+    ),
     "* must be one of `fastest`, `all` or an integer value"
   )
 
   expect_error(
-    load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", fastest_only = TRUE),
+    load_driver_telemetry(
+      season = 2023,
+      round = "Brazil",
+      session = "S",
+      driver = "HAM",
+      fastest_only = TRUE
+    ),
     "The `fastest_only` argument of `load_driver_telemetry\\(\\)` was deprecated in f1dataR 1.4.0 and is now defunct.*"
   )
 
   expect_error(
-    load_driver_telemetry(season = 2023, race = "Brazil", session = "S", driver = "HAM"),
+    load_driver_telemetry(
+      season = 2023,
+      race = "Brazil",
+      session = "S",
+      driver = "HAM"
+    ),
     "The `race` argument of `load_driver_telemetry\\(\\)` was deprecated in f1dataR 1.4.0 and is now defunct.*"
   )
 
   expect_error(
-    get_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM"),
+    get_driver_telemetry(
+      season = 2023,
+      round = "Brazil",
+      session = "S",
+      driver = "HAM"
+    ),
     "`get_driver_telemetry\\(\\)` was deprecated in f1dataR 1.4.0 and is now defunct.*"
   )
 
   expect_error(
-    get_driver_telemetry(season = 2023, race = "Brazil", session = "S", driver = "HAM", fastest_only = TRUE),
+    get_driver_telemetry(
+      season = 2023,
+      race = "Brazil",
+      session = "S",
+      driver = "HAM",
+      fastest_only = TRUE
+    ),
     "`get_driver_telemetry\\(\\)` was deprecated in f1dataR 1.4.0 and is now defunct.*"
   )
 })
@@ -77,7 +129,9 @@ test_that("Load Driver Telemetry works without internet", {
 
   ff1_ver <- get_fastf1_version()
   if (ff1_ver < "3.1") {
-    skip("Skipping load_driver_telemetry (no internet) test as FastF1 is out of date.")
+    skip(
+      "Skipping load_driver_telemetry (no internet) test as FastF1 is out of date."
+    )
   }
 
   clear_cache()
@@ -89,10 +143,22 @@ test_that("Load Driver Telemetry works without internet", {
       suppressMessages({
         httptest2::without_internet({
           expect_message(
-            load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = "all"),
+            load_driver_telemetry(
+              season = 2023,
+              round = "Brazil",
+              session = "S",
+              driver = "HAM",
+              laps = "all"
+            ),
             "f1dataR: Can't connect to F1 Live Timing for FastF1 data download"
           )
-          expect_null(load_driver_telemetry(season = 2023, round = "Brazil", session = "S", driver = "HAM", laps = "all"))
+          expect_null(load_driver_telemetry(
+            season = 2023,
+            round = "Brazil",
+            session = "S",
+            driver = "HAM",
+            laps = "all"
+          ))
         })
       })
     })

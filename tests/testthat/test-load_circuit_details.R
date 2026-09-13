@@ -7,11 +7,17 @@ test_that("load circuit details works", {
   # Note: The test suite can't delete the old fastf1_http_cache.sqlite file
   # because python's process has it locked.
   if (dir.exists(file.path(tempdir(), "tst_circuit_details"))) {
-    unlink(file.path(tempdir(), "tst_circuit_details"), recursive = TRUE, force = TRUE)
+    unlink(
+      file.path(tempdir(), "tst_circuit_details"),
+      recursive = TRUE,
+      force = TRUE
+    )
   }
   withr::local_file(file.path(tempdir(), "tst_circuit_details"))
   dir.create(file.path(tempdir(), "tst_circuit_details"), recursive = TRUE)
-  withr::local_options(f1dataR.cache = file.path(tempdir(), "tst_circuit_details"))
+  withr::local_options(
+    f1dataR.cache = file.path(tempdir(), "tst_circuit_details")
+  )
 
   # Ensure failure if old ff1, then skip
   ff1_ver <- get_fastf1_version()
@@ -28,7 +34,10 @@ test_that("load circuit details works", {
   expect_length(circuit_details, 4)
 
   # Check corners tibble
-  expect_named(circuit_details[[1]], c("x", "y", "number", "letter", "angle", "distance"))
+  expect_named(
+    circuit_details[[1]],
+    c("x", "y", "number", "letter", "angle", "distance")
+  )
   expect_true(is.data.frame(circuit_details[[1]]))
   corners <- circuit_details[[1]]$number
 
@@ -36,11 +45,17 @@ test_that("load circuit details works", {
   expect_true(all(corners == as.integer(corners)))
 
   # Check marshal_post tibble
-  expect_named(circuit_details[[2]], c("x", "y", "number", "letter", "angle", "distance"))
+  expect_named(
+    circuit_details[[2]],
+    c("x", "y", "number", "letter", "angle", "distance")
+  )
   expect_true(is.data.frame(circuit_details[[2]]))
 
   # Check marshal_sectors tibble
-  expect_named(circuit_details[[3]], c("x", "y", "number", "letter", "angle", "distance"))
+  expect_named(
+    circuit_details[[3]],
+    c("x", "y", "number", "letter", "angle", "distance")
+  )
   expect_true(is.data.frame(circuit_details[[3]]))
 
   # Check rotation value
@@ -64,7 +79,9 @@ test_that("Load Circuit Details works without internet", {
 
   ff1_ver <- get_fastf1_version()
   if (ff1_ver < "3.1") {
-    skip("Skipping load_circuit_details (no internet) test as FastF1 is out of date.")
+    skip(
+      "Skipping load_circuit_details (no internet) test as FastF1 is out of date."
+    )
   }
 
   clear_cache()
@@ -75,7 +92,10 @@ test_that("Load Circuit Details works without internet", {
     suppressWarnings({
       suppressMessages({
         httptest2::without_internet({
-          expect_message(load_circuit_details(2023, "bahrain"), "f1dataR: Can't connect to F1 Live Timing for FastF1 data download")
+          expect_message(
+            load_circuit_details(2023, "bahrain"),
+            "f1dataR: Can't connect to F1 Live Timing for FastF1 data download"
+          )
           expect_null(load_circuit_details(2023, "bahrain"))
         })
       })
