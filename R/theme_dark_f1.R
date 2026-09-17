@@ -13,7 +13,6 @@
 #'     ggplot2::geom_point() +
 #'     theme_dark_f1()
 #' }
-
 theme_dark_f1 <- function(axis_marks = FALSE) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     cli::cli_abort(
