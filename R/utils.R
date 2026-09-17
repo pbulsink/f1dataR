@@ -287,6 +287,13 @@ check_ff1_network_connection <- function(path = NA_character_) {
 #' @keywords internal
 check_ff1_version <- function() {
   version <- get_fastf1_version()
+  if (is.na(version)) {
+    cli::cli_warn(c(
+      "Unable to determine {.pkg FastF1} version.",
+      "i" = "Ensure {.pkg fastf1} Python package is installed."
+    ))
+    return(invisible(NA))
+  }
   if (version < "3.1") {
     cli::cli_abort(c(
       "An old version of {.pkg FastF1} is in use. {.pkg f1dataR} requires {.pkg FastF1} version 3.1.0 or newer.",
