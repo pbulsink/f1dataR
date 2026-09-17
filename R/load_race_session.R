@@ -163,7 +163,7 @@ load_race_session <- function(
       cli::cli_alert_danger(
         "f1dataR: Error getting data from FastF1 or F1 Live Timing"
       )
-      status <- FALSE
+      status <<- FALSE
     }
   )
 

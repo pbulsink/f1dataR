@@ -64,8 +64,20 @@ load_driver_telemetry <- function(
 
   # Function Code
   # Param checks
-  if (!(laps %in% c("fastest", "all"))) {
-    if (is.numeric(laps)) {
+  if (
+    missing(driver) ||
+      !is.character(driver) ||
+      length(driver) != 1 ||
+      is.na(driver) ||
+      !nzchar(driver)
+  ) {
+    cli::cli_abort(
+      "{.var driver} must be provided as a single, non-empty character value."
+    )
+  }
+
+  if (length(laps) != 1 || !(laps %in% c("fastest", "all"))) {
+    if (length(laps) == 1 && is.numeric(laps)) {
       if (as.numeric(laps) != as.integer(laps)) {
         cli::cli_abort(
           "{.var laps} must be one of `fastest`, `all` or an integer value"

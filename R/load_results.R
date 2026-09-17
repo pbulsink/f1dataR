@@ -25,13 +25,35 @@ load_results <- function(season = get_current_season(), round = "last") {
     season = season,
     round = round
   )
-  data <- get_jolpica_content(url)
+  lim <- 100
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
   }
 
-  data <- data$MRData$RaceTable$Races$Results[[1]]
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  full <- data$MRData$RaceTable$Races$Results[[1]]
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    full <- dplyr::bind_rows(full, data$MRData$RaceTable$Races$Results[[1]])
+  }
+
+  data <- full
 
   if (!("FastestLap" %in% colnames(data))) {
     # all races from before 2004 will have no 'Fastest Lap' column,

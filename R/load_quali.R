@@ -11,7 +11,8 @@
 #' @return A tibble with one row per driver, with columns driver_id, position, q1, q2, q3,
 #' q1_sec, q2_sec, q3_sec (lap times as strings and in seconds for each qualifying segment),
 #' or NULL if the request fails. For seasons before 2006 (when qualifying had only one segment),
-#' the q2, q3, q2_sec, and q3_sec columns are dropped.
+#' the q2, q3, q2_sec, and q3_sec columns are dropped. Results are paginated automatically,
+#' so sessions with more than 100 results are returned in full.
 load_quali <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 2003 || season > get_current_season())) {
     cli::cli_abort(
@@ -31,13 +32,49 @@ load_quali <- function(season = get_current_season(), round = "last") {
     round = round
   )
 
-  data <- get_jolpica_content(url)
+  lim <- 100
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
   }
 
-  data <- data$MRData$RaceTable$Races$QualifyingResults[[1]]
+  if (length(data$MRData$RaceTable$Races$QualifyingResults) == 0) {
+    cli::cli_alert_warning(
+      "No qualifying data available for this season/round."
+    )
+    return(NULL)
+  }
+
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  full <- data$MRData$RaceTable$Races$QualifyingResults[[1]]
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    if (length(data$MRData$RaceTable$Races$QualifyingResults) == 0) {
+      break
+    }
+
+    full <- dplyr::bind_rows(
+      full,
+      data$MRData$RaceTable$Races$QualifyingResults[[1]]
+    )
+  }
+
+  data <- full
 
   data <- add_col_if_absent(data, "Q2", NA_character_)
   data <- add_col_if_absent(data, "Q3", NA_character_)

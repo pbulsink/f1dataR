@@ -114,11 +114,21 @@ plot_fastest <- function(
       dplyr::filter(.data$code == driver_abbreviation) %>%
       dplyr::pull("driver_id")
     lap_time <- load_laps(season, round) %>%
-      dplyr::filter(.data$driver_id == driver_id) %>%
+      dplyr::filter(.data$driver_id == .env$driver_id) %>%
       dplyr::filter(.data$time_sec == min(.data$time_sec)) %>%
       dplyr::pull(.data$time)
-    lap_time <- paste0(" | ", lap_time)
+    if (length(lap_time) == 0) {
+      lap_time <- ""
+    } else {
+      lap_time <- paste0(" | ", lap_time)
+    }
   }
+
+  season_year <- ifelse(
+    season == "current",
+    get_current_season(),
+    season
+  )
 
   race_name <- s$event$EventName
 
@@ -127,9 +137,12 @@ plot_fastest <- function(
       session,
       c("q", "Q") ~ paste0(race_name, " Qualifying"),
       c("s", "S") ~ paste0(race_name, " Sprint"),
+      c("sq", "SQ") ~ paste0(race_name, " Sprint Qualifying"),
+      c("ss", "SS") ~ paste0(race_name, " Sprint Shootout"),
       c("fp1", "FP1") ~ paste0(race_name, " FP1"),
       c("fp2", "FP2") ~ paste0(race_name, " FP2"),
-      c("fp3", "FP3") ~ paste0(race_name, " FP3")
+      c("fp3", "FP3") ~ paste0(race_name, " FP3"),
+      default = race_name
     )
   }
 
@@ -157,7 +170,7 @@ plot_fastest <- function(
       ggplot2::labs(
         title = glue::glue(
           "{year} {race_name}",
-          year = season,
+          year = season_year,
           race = race_name
         ),
         subtitle = glue::glue(
@@ -178,7 +191,7 @@ plot_fastest <- function(
       ggplot2::labs(
         title = glue::glue(
           "{year} {race_name}",
-          year = season,
+          year = season_year,
           race = race_name
         ),
         subtitle = glue::glue(

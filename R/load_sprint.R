@@ -12,7 +12,8 @@
 #' @return A tibble with columns driver_id, constructor_id, points awarded, finishing position,
 #' grid position, laps completed, race status (finished or otherwise), gap to
 #' first place, fastest lap's lap number, fastest lap time, fastest lap in seconds,
-#' or NULL if no sprint exists for this season/round combo
+#' or NULL if no sprint exists for this season/round combo. Results are paginated
+#' automatically, so sprints with more than 100 results are returned in full.
 load_sprint <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 2021 || season > get_current_season())) {
     cli::cli_abort(
@@ -26,7 +27,8 @@ load_sprint <- function(season = get_current_season(), round = "last") {
     round = round
   )
 
-  data <- get_jolpica_content(url)
+  lim <- 100
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
@@ -41,7 +43,35 @@ load_sprint <- function(season = get_current_season(), round = "last") {
     return(NULL)
   }
 
-  data <- data$MRData$RaceTable$Races$SprintResults[[1]]
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  full <- data$MRData$RaceTable$Races$SprintResults[[1]]
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    if (length(data$MRData$RaceTable$Races) == 0) {
+      break
+    }
+
+    full <- dplyr::bind_rows(
+      full,
+      data$MRData$RaceTable$Races$SprintResults[[1]]
+    )
+  }
+
+  data <- full
 
   data <- data %>%
     tidyr::unnest(

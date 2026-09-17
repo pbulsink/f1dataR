@@ -49,6 +49,11 @@ load_pitstops <- function(
   total <- data$MRData$total %>% as.numeric()
   offset <- data$MRData$offset %>% as.numeric()
 
+  if (length(data$MRData$RaceTable$Races$PitStops) == 0) {
+    cli::cli_alert_warning("No pit stop data available for this season/round.")
+    return(NULL)
+  }
+
   full <- data$MRData$RaceTable$Races$PitStops[[1]]
 
   # Iterate over the request until completed
@@ -62,6 +67,10 @@ load_pitstops <- function(
 
     if (is.null(data)) {
       return(NULL)
+    }
+
+    if (length(data$MRData$RaceTable$Races$PitStops) == 0) {
+      break
     }
 
     full <- dplyr::bind_rows(full, data$MRData$RaceTable$Races$PitStops[[1]])

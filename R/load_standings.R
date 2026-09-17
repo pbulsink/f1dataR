@@ -32,14 +32,44 @@ load_standings <- function(
     type = type
   )
 
-  data <- get_jolpica_content(url)
+  lim <- 100
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
   }
 
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  standings_col <- if (type == "driver") {
+    "DriverStandings"
+  } else {
+    "ConstructorStandings"
+  }
+  full <- data$MRData$StandingsTable$StandingsLists[[standings_col]][[1]]
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    full <- dplyr::bind_rows(
+      full,
+      data$MRData$StandingsTable$StandingsLists[[standings_col]][[1]]
+    )
+  }
+
   if (type == "driver") {
-    data$MRData$StandingsTable$StandingsLists$DriverStandings[[1]] %>%
+    full %>%
       tidyr::unnest(cols = c("Driver")) %>%
       dplyr::select(
         "driverId",
@@ -61,7 +91,7 @@ load_standings <- function(
       tibble::as_tibble() %>%
       janitor::clean_names()
   } else if (type == "constructor") {
-    data$MRData$StandingsTable$StandingsLists$ConstructorStandings[[1]] %>%
+    full %>%
       tidyr::unnest(cols = c("Constructor")) %>%
       suppressWarnings() %>%
       suppressMessages() %>%

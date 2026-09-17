@@ -69,9 +69,10 @@ load_session_laps <- function(
     # prepping for Q1/Q2/Q3 labels - this has to happen before timedelta64 is converted to seconds
     reticulate::py_run_string(paste(
       "q1, q2, q3 = session.laps.split_qualifying_sessions()",
-      "q1len = len(q1.index)",
-      "q2len = len(q2.index)",
-      "q3len = len(q3.index)",
+      "q1_idx = list(q1.index)",
+      "q2_idx = list(q2.index)",
+      "q3_idx = list(q3.index)",
+      "laps_idx = list(session.laps.index)",
       sep = "\n"
     ))
   }
@@ -96,24 +97,25 @@ load_session_laps <- function(
   laps <- reticulate::py_to_r(reticulate::py_get_item(py_env, "laps"))
 
   if (session %in% c("Q", "SQ")) {
-    # pull the lengths of each Quali session from the python env.
-    q1len <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q1len"))
-    q2len <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q2len"))
-    q3len <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q3len"))
+    # pull the original row index and the per-segment indices from the python env,
+    # so labels can be joined by index rather than assumed positionally.
+    laps_idx <- reticulate::py_to_r(reticulate::py_get_item(py_env, "laps_idx"))
+    q1_idx <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q1_idx"))
+    q2_idx <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q2_idx"))
+    q3_idx <- reticulate::py_to_r(reticulate::py_get_item(py_env, "q3_idx"))
 
-    if (session == "Q") {
-      laps$SessionType <- c(
-        rep("Q1", q1len),
-        rep("Q2", q2len),
-        rep("Q3", q3len)
-      )
+    labels <- if (session == "Q") {
+      c("Q1", "Q2", "Q3")
     } else {
-      laps$SessionType <- c(
-        rep("SQ1", q1len),
-        rep("SQ2", q2len),
-        rep("SQ3", q3len)
-      )
+      c("SQ1", "SQ2", "SQ3")
     }
+
+    session_type <- rep(NA_character_, length(laps_idx))
+    session_type[laps_idx %in% q1_idx] <- labels[1]
+    session_type[laps_idx %in% q2_idx] <- labels[2]
+    session_type[laps_idx %in% q3_idx] <- labels[3]
+
+    laps$SessionType <- session_type
   } else {
     laps$SessionType <- session
   }

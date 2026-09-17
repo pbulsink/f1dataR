@@ -46,14 +46,20 @@ load_laps <- function(
   total <- data$MRData$total %>% as.numeric()
   offset <- data$MRData$offset %>% as.numeric()
 
+  if (length(data$MRData$RaceTable$Races$Laps) == 0) {
+    cli::cli_alert_warning("No lap data available for this season/round.")
+    return(NULL)
+  }
+
   # Jolpica paginates by driver-lap timing row, not by lap, so a single lap's
   # timing rows can be split across pages (e.g. non-20-car seasons). Collect all
   # pages of `Laps` (each a data.frame of `number` + `Timings`) first, then
   # aggregate `Timings` per `number` once all pages are in hand.
   pages <- list(data$MRData$RaceTable$Races$Laps[[1]])
+  received <- sum(vapply(pages[[1]]$Timings, nrow, integer(1)))
 
   # Iterate over the request until completed
-  while (offset + lim <= total) {
+  while (received < total) {
     offset <- offset + lim
 
     data <- get_jolpica_content(
@@ -65,7 +71,13 @@ load_laps <- function(
       return(NULL)
     }
 
-    pages[[length(pages) + 1]] <- data$MRData$RaceTable$Races$Laps[[1]]
+    if (length(data$MRData$RaceTable$Races$Laps) == 0) {
+      break
+    }
+
+    page <- data$MRData$RaceTable$Races$Laps[[1]]
+    pages[[length(pages) + 1]] <- page
+    received <- received + sum(vapply(page$Timings, nrow, integer(1)))
   }
 
   full <- dplyr::bind_rows(pages)

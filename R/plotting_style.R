@@ -564,9 +564,15 @@ get_session <- function(
 ) {
   # checks
   check_ff1_version()
-  if (package_version(get_fastf1_version()) < "3.4") {
+  ff1_version <- get_fastf1_version()
+  if (is.na(ff1_version)) {
     cli::cli_abort(
-      "{.fn get_driver_style} requires FastF1 version 3.4.0 or later"
+      "{.pkg fastf1} Python package is not installed or its version could not be determined."
+    )
+  }
+  if (ff1_version < "3.4") {
+    cli::cli_abort(
+      "This function requires FastF1 version 3.4.0 or later"
     )
   }
 
@@ -579,6 +585,10 @@ get_session <- function(
     f1datar_cache <- normalizePath(tempdir(), winslash = "/")
   } else {
     f1datar_cache <- normalizePath(getOption("f1dataR.cache"), winslash = "/")
+  }
+
+  if (!dir.exists(f1datar_cache)) {
+    dir.create(f1datar_cache, recursive = TRUE)
   }
 
   reticulate::py_run_string("import fastf1")

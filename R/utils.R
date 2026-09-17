@@ -170,6 +170,10 @@ get_current_season <- function() {
 #' @return A numeric variable that represents that time in seconds
 #' @keywords internal
 time_to_sec <- function(time) {
+  if (length(time) == 0) {
+    return(numeric(0))
+  }
+
   subfun <- function(x) {
     if (is.na(x)) {
       return(NA_real_)
@@ -304,6 +308,7 @@ check_ff1_version <- function() {
       "An old version of {.pkg FastF1} is in use. {.pkg f1dataR} requires {.pkg FastF1} version 3.4.0 or newer for some functions.",
       x = "Support for older {.pkg FastF1} versions may be removed soon."
     ))
+    invisible(TRUE)
   } else {
     invisible(TRUE)
   }
@@ -346,19 +351,25 @@ get_fastf1_version <- function() {
 #' @return the data.frame as provided (converted to tibble)
 #' @keywords internal
 add_col_if_absent <- function(data, column_name, na_type = NA) {
-  if (!is.na(na_type)) {
+  if (length(na_type) != 1 || !is.na(na_type)) {
     cli::cli_abort(
-      x = "{.arg na_type} must be provided as an actual {.code NA_type_} (for example, {.val NA_character_})."
+      c(
+        x = "{.arg na_type} must be provided as an actual {.code NA_type_} (for example, {.val NA_character_})."
+      )
     )
   }
   if (!(inherits(data, "data.frame"))) {
     cli::cli_abort(
-      x = "{.arg data} must be provided as a {.code data.frame} or {.code tibble}."
+      c(
+        x = "{.arg data} must be provided as a {.code data.frame} or {.code tibble}."
+      )
     )
   }
   if (!(length(column_name) == 1) | !(inherits(column_name, "character"))) {
     cli::cli_abort(
-      x = "{.arg column_name} must be provided as a single {.code character} value."
+      c(
+        x = "{.arg column_name} must be provided as a single {.code character} value."
+      )
     )
   }
   if (!(column_name %in% colnames(data))) {

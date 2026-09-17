@@ -27,6 +27,7 @@
 
       # set the cachedir to our new location for fastf1 caching too
       options("f1dataR.cache" = cache_dir)
+      memoise_option <- cache_dir
     }
     cache <- cachem::cache_disk(dir = memoise_option)
   } else if (memoise_option == "memory") {

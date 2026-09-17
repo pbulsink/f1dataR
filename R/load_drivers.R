@@ -16,13 +16,36 @@ load_drivers <- function(season = get_current_season()) {
   }
 
   url <- glue::glue("{season}/drivers.json", season = season)
-  data <- get_jolpica_content(url)
+
+  lim <- 100
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
   }
 
-  data <- data$MRData$DriverTable$Drivers
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  full <- data$MRData$DriverTable$Drivers
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    full <- dplyr::bind_rows(full, data$MRData$DriverTable$Drivers)
+  }
+
+  data <- full
 
   data <- add_col_if_absent(data, "code", NA_character_)
   data <- add_col_if_absent(data, "permanentNumber", NA_integer_)
