@@ -34,18 +34,40 @@ load_pitstops <- function(
   }
 
   # Function Code
+  lim <- 100
   url <- glue::glue(
     "{season}/{round}/pitstops.json",
     season = season,
     round = round
   )
-  data <- get_jolpica_content(url, parameters = list(limit = 100))
+  data <- get_jolpica_content(url, parameters = list(limit = lim))
 
   if (is.null(data)) {
     return(NULL)
   }
 
-  data$MRData$RaceTable$Races$PitStops[[1]] %>%
+  total <- data$MRData$total %>% as.numeric()
+  offset <- data$MRData$offset %>% as.numeric()
+
+  full <- data$MRData$RaceTable$Races$PitStops[[1]]
+
+  # Iterate over the request until completed
+  while (nrow(full) < total) {
+    offset <- offset + lim
+
+    data <- get_jolpica_content(
+      url,
+      parameters = list(limit = lim, offset = offset)
+    )
+
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    full <- dplyr::bind_rows(full, data$MRData$RaceTable$Races$PitStops[[1]])
+  }
+
+  full %>%
     tibble::as_tibble() %>%
     janitor::clean_names()
 }
