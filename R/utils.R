@@ -62,7 +62,7 @@ get_jolpica_content <- function(url, parameters = list(limit = 40)) {
     ))
   }
   if (!is.list(parameters)) {
-    as.list(parameters)
+    parameters <- as.list(parameters)
   }
 
   jolpica_raw <- httr2::request("https://api.jolpi.ca/ergast/f1/") %>%
@@ -75,7 +75,7 @@ get_jolpica_content <- function(url, parameters = list(limit = 40)) {
       "f1dataR/{ver}",
       ver = utils::installed.packages()["f1dataR", "Version"]
     )) %>%
-    httr2::req_throttle(4 / 1) %>%
+    httr2::req_throttle(capacity = 500, fill_time_s = 3600) %>%
     httr2::req_error(is_error = ~FALSE)
 
   jolpica_res <- NULL
@@ -254,7 +254,7 @@ check_ff1_network_connection <- function(path = NA_character_) {
           "f1dataR/{ver}",
           ver = utils::installed.packages()["f1dataR", "Version"]
         )) %>%
-        httr2::req_throttle(4 / 1) %>%
+        httr2::req_throttle(capacity = 500, fill_time_s = 3600) %>%
         httr2::req_error(is_error = ~FALSE)
       status <- ff1raw %>%
         httr2::req_perform()

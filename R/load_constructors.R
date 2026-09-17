@@ -22,7 +22,7 @@ load_constructors <- function() {
   full <- data$MRData$ConstructorTable$Constructors
 
   # Iterate over the request until completed
-  while (offset + lim <= total) {
+  while (nrow(full) < total) {
     offset <- offset + lim
 
     parameters <- list(limit = lim, offset = offset)

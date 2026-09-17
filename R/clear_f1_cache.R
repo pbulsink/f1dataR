@@ -19,10 +19,17 @@ clear_f1_cache <- function() {
     if ("fastf1" %in% reticulate::py_list_packages()$package) {
       reticulate::py_run_string("import fastf1")
 
+      memoise_option <- getOption("f1dataR.cache", default = "memory")
+      if (memoise_option %in% c("memory", "off", "filesystem")) {
+        fastf1_cache_dir <- tempdir()
+      } else {
+        fastf1_cache_dir <- memoise_option
+      }
+
       try(
         reticulate::py_run_string(glue::glue(
           "fastf1.Cache.clear_cache('{cache_dir}')",
-          cache_dir = normalizePath(getOption("f1dataR.cache"))
+          cache_dir = normalizePath(fastf1_cache_dir, mustWork = FALSE)
         ))
       )
     }

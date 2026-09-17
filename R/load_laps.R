@@ -45,7 +45,11 @@ load_laps <- function(
   total <- data$MRData$total %>% as.numeric()
   offset <- data$MRData$offset %>% as.numeric()
 
-  full <- data$MRData$RaceTable$Races$Laps[[1]][2]
+  # Jolpica paginates by driver-lap timing row, not by lap, so a single lap's
+  # timing rows can be split across pages (e.g. non-20-car seasons). Collect all
+  # pages of `Laps` (each a data.frame of `number` + `Timings`) first, then
+  # aggregate `Timings` per `number` once all pages are in hand.
+  pages <- list(data$MRData$RaceTable$Races$Laps[[1]])
 
   # Iterate over the request until completed
   while (offset + lim <= total) {
@@ -60,22 +64,27 @@ load_laps <- function(
       return(NULL)
     }
 
-    full <- dplyr::bind_rows(full, data$MRData$RaceTable$Races$Laps[[1]][2])
+    pages[[length(pages) + 1]] <- data$MRData$RaceTable$Races$Laps[[1]]
   }
 
-  laps <- tibble::tibble()
+  full <- dplyr::bind_rows(pages)
+
   season_text <- ifelse(season == "current", get_current_season(), season)
-  for (i in seq_len(nrow(full))) {
-    laps <- dplyr::bind_rows(
-      laps,
-      full[[1]][i][[1]] %>%
-        dplyr::mutate(
-          lap = i,
-          time_sec = time_to_sec(.data$time),
-          season = season_text
-        )
+
+  laps <- full %>%
+    dplyr::mutate(lap = as.numeric(.data$number)) %>%
+    dplyr::group_by(.data$lap) %>%
+    dplyr::summarise(
+      Timings = list(dplyr::bind_rows(.data$Timings)),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(.data$lap) %>%
+    tidyr::unnest(cols = "Timings") %>%
+    dplyr::mutate(
+      time_sec = time_to_sec(.data$time),
+      season = season_text
     )
-  }
+
   laps %>%
     tibble::tibble() %>%
     janitor::clean_names()
