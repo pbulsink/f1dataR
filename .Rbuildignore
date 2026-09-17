@@ -14,6 +14,10 @@
 ^cran-comments\.md$
 ^vignettes/jolpica-data-analysis.Rmd.orig$
 ^vignettes/introduction.Rmd.orig$
+^vignettes/alonso-penalty-2024.Rmd.orig$
+^vignettes/plotting-turn-info.Rmd.orig$
+^vignettes/.*\.png$
+^vignettes/precompile\.R$
 ^doc$
 ^Meta$
 ^CRAN-SUBMISSION$

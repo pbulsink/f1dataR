@@ -1,16 +1,18 @@
 #' Load Results
 #'
-#' @description Loads final race results for a given year and round. Use `.load_results()` for an uncached version
+#' @description Loads final race results for a given year and round.
 #'
 #' @param season number from 1950 to current season (or the word 'current') (defaults to current season).
-#' @param round number from 1 to 23 (depending on season), and defaults to most recent. Also accepts `'last'`.
+#' @param round number from 1 to the number of rounds in the season, and defaults to most recent. Also accepts `'last'`.
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang .data
 #' @export
 #' @return A tibble with one row per driver, with columns for driver & constructor ID, the points won by each driver in
 #'   the race, their finishing position, their starting (grid) position, number of completed laps, status code, gap to
 #'   leader (or time of race), fastest lap ranking, drivers' fastest lap time, top speed achieved, and fastest lap time
-#'   in seconds.
+#'   in seconds, or NULL if the request fails. `gap` is a string like `"m:ss.ttt"` giving the gap to the leader, or
+#'   the leader's total race time for the race winner. For races without fastest-lap data (races before 2004, and
+#'   2021 round 12), `fastest_rank`, `fastest`, `top_speed_kph`, and `time_sec` will be `NA`.
 load_results <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(
@@ -116,7 +118,7 @@ load_results <- function(season = get_current_season(), round = "last") {
         gap = "Time.time",
         fastest_rank = "FastestLap.rank",
         fastest = "FastestLap.Time.time",
-        top_speed_kph = "FastestLap.AverageSpeed.speed",
+        top_speed_kph = "FastestLap.AverageSpeed.speed"
       ) %>%
       dplyr::mutate(time_sec = time_to_sec(.data$fastest)) %>%
       tibble::as_tibble() %>%

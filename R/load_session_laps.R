@@ -3,16 +3,23 @@
 #' @description Loads lapwise data for a race session.
 #'
 #' Includes each driver's each lap's laptime, pit in/out time, tyre information, track status, and (optionally) weather information.
-#' The resulting data frame contains a column for the session type. Note that quali sessions are labelled Q1, Q2 & Q3.
+#' The resulting data frame contains a column for the session type. Note that quali sessions are labelled
+#' Q1, Q2 & Q3, and sprint qualifying sessions (`session = 'SQ'`) are labelled SQ1, SQ2 & SQ3.
 #'
-#' Cache directory can be set by setting `option(f1dataR.cache = [cache dir])`,
-#' default is the current working directory.
+#' Cache directory can be set by setting `options(f1dataR.cache = [cache dir])`.
+#' The default option is `"memory"`; when the option is `"memory"`, `"off"`, or
+#' `"filesystem"`, the underlying FastF1 HTTP cache is written to `tempdir()`.
 #'
 #' @inheritParams load_race_session
 #' @param add_weather Whether to add weather information to the laps. See
 #' \href{https://docs.fastf1.dev/core.html#fastf1.core.Laps.get_weather_data}{fastf1 documentation} for info on weather.
 #'
-#' @return A tibble. Note time information is in seconds, see \href{https://docs.fastf1.dev/time_explanation.html}{fastf1 documentation} for more information on timing.
+#' @return A tibble with (at least) columns `driver`, `lap`, `time`, `lap_time`, `stint`,
+#' `compound`, and `session_type`. Additional columns are provided by FastF1, see
+#' \href{https://docs.fastf1.dev/core.html#fastf1.core.Laps}{fastf1 documentation} for more
+#' information on available columns. Note time information is in seconds, see
+#' \href{https://docs.fastf1.dev/time_explanation.html}{fastf1 documentation} for more information
+#' on timing. Returns `NULL` if the session fails to load.
 #' @export
 load_session_laps <- function(
   season = get_current_season(),
@@ -87,9 +94,6 @@ load_session_laps <- function(
     sep = "\n"
   ))
   laps <- reticulate::py_to_r(reticulate::py_get_item(py_env, "laps"))
-
-  laps <- laps %>%
-    dplyr::mutate("Time" = .data$Time)
 
   if (session %in% c("Q", "SQ")) {
     # pull the lengths of each Quali session from the python env.

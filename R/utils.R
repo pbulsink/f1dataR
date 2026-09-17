@@ -2,13 +2,13 @@
 #'
 #' @description Gets Ergast content and returns the processed json object if
 #' no Ergast errors are found. This will automatically fall back from https://
-#' to http:// if Ergast suffers errors, and will automatically retry up to 5
+#' to http:// if Ergast suffers errors, and will automatically retry up to 10
 #' times by each protocol
 #'
 #' `r lifecycle::badge("deprecated")`
 #'
-#' Note the Ergast Motor Racing Database API will shut down at the end of 2024.
-#' This function willbe replaced with a new data-source when one is made available.
+#' Note the Ergast Motor Racing Database API shut down at the end of 2024.
+#' This function was replaced by the Jolpica data source.
 #'
 #' @param url the Ergast URL tail to get from the API (for example,
 #' `"{season}/circuits.json?limit=40"` is called from `load_circuits()`).
@@ -34,15 +34,15 @@ get_ergast_content <- function(url) {
 #'
 #' @description Gets Jolpica-F1 content and returns the processed json object if
 #' no  errors are found. This will automatically fall back from https://
-#' to http:// if Jolpica suffers errors, and will automatically retry up to 5
+#' to http:// if Jolpica suffers errors, and will automatically retry up to 10
 #' times by each protocol
 #'
 #' Note in 2024 this replaced the deprecated Ergast API. Much of the historical data
 #' is duplicated in Jolpica
 #'
 #' @param url the Jolpica URL tail to get from the API (for example,
-#' `"{season}/circuits.json?limit=40"` is called from `load_circuits()`).
-#' @param parameters Parameters to add to the url. Typically `"...?limit=40"`.
+#' `"{season}/circuits.json"` is called from `load_circuits()`).
+#' @param parameters Parameters to add to the url. Typically fills things like `limit`: passed as a `list(limit = 40)`.
 #' @keywords internal
 #' @return the result of `jsonlite::fromJSON` called on Jolpica's return content.
 #' Further processing is performed by specific functions
@@ -50,9 +50,9 @@ get_jolpica_content <- function(url, parameters = list(limit = 40)) {
   # Function Code
 
   # note:
-  # Throttles at 200 req/hr requested.
+  # Throttles at 500 req/hr (Jolpica's documented sustained limit).
   # Caches requests at option = 'f1dataR.cache' location, if not 'current', 'last', or 'latest' result requested
-  # Automatically retries request up to 5 times. Back-off provided in httr2 documentation
+  # Automatically retries request up to 10 times. Back-off provided in httr2 documentation
   # Automatically retries at http if https fails after retries.
 
   if (grepl("?", url, fixed = TRUE)) {
@@ -167,8 +167,8 @@ get_current_season <- function() {
 #' @description This function converts clock format time (0:00.000) to seconds (0.000s)
 #'
 #' @param time character string with clock format (0:00.000)
-#' @importFrom magrittr "%>%"
 #' @return A numeric variable that represents that time in seconds
+#' @keywords internal
 time_to_sec <- function(time) {
   subfun <- function(x) {
     if (is.na(x)) {
@@ -316,7 +316,7 @@ check_ff1_version <- function() {
 #' Gets the current installed FastF1 version available (via `reticulate`) to the function.
 #' Displays a note if significantly out of date.
 #' @export
-#' @return version as class `package_version`
+#' @return version as class `package_version`, or `NA` if `fastf1` is not installed
 get_fastf1_version <- function() {
   reticulate::py_available(initialize = TRUE)
   ver <- reticulate::py_list_packages() %>%

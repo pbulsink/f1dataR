@@ -13,12 +13,12 @@ load_sprint(season = get_current_season(), round = "last")
 to most recent. Also accepts \code{'last'}.}
 }
 \value{
-A dataframetibble with columns driver_id, constructor_id, points awarded, finishing position,
+A tibble with columns driver_id, constructor_id, points awarded, finishing position,
 grid position, laps completed, race status (finished or otherwise), gap to
-first place, fastest lap, fastest lap time, fastest lap in seconds,
+first place, fastest lap's lap number, fastest lap time, fastest lap in seconds,
 or NULL if no sprint exists for this season/round combo
 }
 \description{
-Loads final race results for a given year and round. Note not all rounds have
-sprint results. Use \code{.load_sprint()} for an uncached version of this function.
+Loads final sprint race results for a given year and round. Note not all rounds have
+sprint results.
 }

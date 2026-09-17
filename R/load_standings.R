@@ -1,9 +1,9 @@
 #' Load Standings
 #'
 #' @description Loads standings at the end of a given season and round for drivers' or
-#' constructors' championships. Use `.load_standings()` for an uncached version of this function.
+#' constructors' championships.
 #'
-#' @param season number from 2003 to current season (defaults to current season).
+#' @param season number from 2003 to current season (or the word 'current') (defaults to current season).
 #' @param round number from 1 to 23 (depending on season), and defaults
 #' to most recent. Also accepts `'last'`.
 #' @param type select `'driver'` or `'constructor'` championship data. Defaults to
@@ -11,7 +11,7 @@
 #' @importFrom magrittr "%>%"
 #' @export
 #' @return A tibble with columns driver_id (or constructor_id), position,
-#' points, wins (and constructors_id in the case of drivers championship).
+#' points, wins (and constructor_id in the case of drivers championship), or NULL if the request fails.
 load_standings <- function(
   season = get_current_season(),
   round = "last",
@@ -23,9 +23,7 @@ load_standings <- function(
     )
   }
 
-  if (!(type %in% c("driver", "constructor"))) {
-    cli::cli_abort('{.var type} must be either "driver" or "constructor"')
-  }
+  type <- match.arg(tolower(type), c("driver", "constructor"))
 
   url <- glue::glue(
     "{season}/{round}/{type}Standings.json",

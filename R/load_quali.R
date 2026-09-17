@@ -1,21 +1,29 @@
 #' Load Qualifying Results
 #'
 #' @description Loads qualifying session results for a given season and round.
-#' Use `.load_quali()` for an uncached version.
 #'
-#' @param season number from 2003 to current season (defaults to current season).
+#' @param season number from 2003 to current season (or the word 'current') (defaults to current season).
 #' @param round number from 1 to 23 (depending on season), and defaults
 #' to most recent.  Also accepts `'last'`.
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang .data
 #' @export
-#' @return A tibble with one row per driver
+#' @return A tibble with one row per driver, with columns driver_id, position, q1, q2, q3,
+#' q1_sec, q2_sec, q3_sec (lap times as strings and in seconds for each qualifying segment),
+#' or NULL if the request fails. For seasons before 2006 (when qualifying had only one segment),
+#' the q2, q3, q2_sec, and q3_sec columns are dropped.
 load_quali <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 2003 || season > get_current_season())) {
     cli::cli_abort(
       '{.var season} must be between 2003 and {get_current_season()} (or use "current")'
     )
   }
+
+  season_num <- ifelse(
+    season == "current",
+    get_current_season(),
+    as.numeric(season)
+  )
 
   url <- glue::glue(
     "{season}/{round}/qualifying.json",
@@ -47,7 +55,7 @@ load_quali <- function(season = get_current_season(), round = "last") {
     tibble::as_tibble() %>%
     janitor::clean_names()
 
-  if (season < 2006) {
+  if (season_num < 2006) {
     return(data %>% dplyr::select(-c("q2", "q3", "q2_sec", "q3_sec")))
   } else {
     return(data)

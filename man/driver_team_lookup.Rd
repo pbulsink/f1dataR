@@ -48,8 +48,8 @@ get_session_drivers_and_teams(season, round, session = "R")
 \item{season}{The season for which the look-up should occur. Should be a number from 2018 to current season.
 Defaults to current season.}
 
-\item{round}{number from 1 to 24 (depending on season selected) and defaults
-to most recent. Also accepts race name.}
+\item{round}{number from 1 to 24 (depending on season selected), defaults
+to \code{1}. Also accepts race name.}
 
 \item{session}{the code for the session to load. Options are \code{'FP1'}, \code{'FP2'}, \code{'FP3'},
 \code{'Q'}, \code{'S'}, \code{'SS'},\code{'SQ'}, and \code{'R'}. Default is \code{'R'}, which refers to Race.}
@@ -60,7 +60,7 @@ to most recent. Also accepts race name.}
 }
 \value{
 for \code{get_session_drivers_and_teams()} a data.frame,
-for \code{get_drivers_by_team()} a unnamed character vector with all drivers for the requested team,
+for \code{get_drivers_by_team()} an unnamed character vector with all drivers for the requested team,
 for all other functions a character result with the requested value.
 }
 \description{

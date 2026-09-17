@@ -1,14 +1,13 @@
 #' Load Driver Info
 #'
 #' @description Loads driver info for all participants in a given season.
-#' Use `.load_drivers()` for an uncached version of this function.
 #'
-#' @param season number from 1950 to current season (defaults to current season).
+#' @param season number from 1950 to current season, or `"current"` (defaults to current season).
 #' @importFrom magrittr "%>%"
 #' @export
-#' @return A tibble with columns driver_id (unique and recurring), first name,
-#' last name, nationality, date of birth (yyyy-mm-dd format), driver code, and
-#' permanent number (for post-2014 drivers).
+#' @return A tibble with columns `driver_id` (unique and recurring), `given_name`,
+#' `family_name`, `nationality`, `date_of_birth` (yyyy-mm-dd format), `code` (driver code), and
+#' `permanent_number` (for post-2014 drivers). Returns `NULL` on API failure.
 load_drivers <- function(season = get_current_season()) {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(

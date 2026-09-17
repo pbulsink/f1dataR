@@ -7,15 +7,17 @@
 load_quali(season = get_current_season(), round = "last")
 }
 \arguments{
-\item{season}{number from 2003 to current season (defaults to current season).}
+\item{season}{number from 2003 to current season (or the word 'current') (defaults to current season).}
 
 \item{round}{number from 1 to 23 (depending on season), and defaults
 to most recent.  Also accepts \code{'last'}.}
 }
 \value{
-A tibble with one row per driver
+A tibble with one row per driver, with columns driver_id, position, q1, q2, q3,
+q1_sec, q2_sec, q3_sec (lap times as strings and in seconds for each qualifying segment),
+or NULL if the request fails. For seasons before 2006 (when qualifying had only one segment),
+the q2, q3, q2_sec, and q3_sec columns are dropped.
 }
 \description{
 Loads qualifying session results for a given season and round.
-Use \code{.load_quali()} for an uncached version.
 }

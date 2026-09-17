@@ -7,24 +7,27 @@
 #' session data streams. See the \href{https://docs.fastf1.dev/}{fastf1 documentation}
 #' for more details on the data returned by the python API.
 #'
-#' Cache directory can be set by setting `option(f1dataR.cache = [cache dir])`,
-#' default is the current working directory.
+#' Cache directory can be set by setting `options(f1dataR.cache = [cache dir])`.
+#' The default option is `"memory"`; when the option is `"memory"`, `"off"`, or
+#' `"filesystem"`, the underlying FastF1 HTTP cache is written to `tempdir()`.
 #'
 #' @param obj_name name assigned to the loaded session to be referenced later.
 #' Leave as `'session'` unless otherwise required.
 #' @param season number from 2018 to current season. Defaults to current season.
-#' @param round number from 1 to 24 (depending on season selected) and defaults
-#' to most recent. Also accepts race name.
+#' @param round number from 1 to 24 (depending on season selected), defaults
+#' to `1`. Also accepts race name.
 #' @param session the code for the session to load. Options are `'FP1'`, `'FP2'`, `'FP3'`,
 #' `'Q'`, `'S'`, `'SS'`,`'SQ'`, and `'R'`. Default is `'R'`, which refers to Race.
 #' @param log_level Detail of logging from fastf1 to be displayed. Choice of:
-#' `'DEBUG'`, `'INFO'`, `'WARNING'`, `'ERROR'` and `'CRITICAL.'` See
+#' `'DEBUG'`, `'INFO'`, `'WARNING'`, `'ERROR'` and `'CRITICAL'`. See
 #' \href{https://docs.fastf1.dev/fastf1.html#configure-logging-verbosity}{fastf1 documentation}.
 #' @param race `r lifecycle::badge("deprecated")` `race` is no longer supported, use `round`
 #' @import reticulate
-#' @return A session object to be used in other functions invisibly.
+#' @return Invisibly, a `reticulate` Python FastF1 session object, primarily useful
+#' for advanced users who want to run their own `reticulate::py_run_string()` calls
+#' against it. Returns `NULL` if the session fails to load.
 #' @export
-#' @seealso [load_session_laps()] [plot_fastest()]
+#' @seealso [load_session_laps()], [plot_fastest()]
 #' @examples
 #' # Load the quali session from 2019 first round
 #' if (interactive()) {
@@ -53,8 +56,6 @@ load_race_session <- function(
     cli::cli_abort(
       '{.var season} must be between 2018 and {get_current_season()} (or use "current")'
     )
-    # stop(glue::glue('Year must be between 2018 and {current} (or use "current")',
-    #                 current = get_current_season()))
   }
   if (!(session %in% c("FP1", "FP2", "FP3", "Q", "R", "S", "SS", "SQ"))) {
     cli::cli_abort(

@@ -16,7 +16,6 @@ Config/reticulate:
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends: 
     R (>= 3.5.0),
     reticulate (>= 1.46)
@@ -47,3 +46,4 @@ VignetteBuilder: knitr
 URL: https://scasanova.github.io/f1dataR/, https://github.com/SCasanova/f1dataR
 BugReports: https://github.com/SCasanova/f1dataR/issues
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

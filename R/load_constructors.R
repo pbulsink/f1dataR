@@ -1,11 +1,10 @@
 #' Load Constructor Info
 #'
-#' @description Loads constructor info for all participants in a given season.
-#' Use `.load_constructors()`for an uncached version of this function
+#' @description Loads info for all constructors that have ever participated in Formula 1.
 #'
 #' @importFrom magrittr "%>%"
 #' @export
-#' @return A tibble with one row per constructor
+#' @return A tibble with one row per constructor. Returns `NULL` on API failure.
 load_constructors <- function() {
   lim <- 100
   url <- "constructors.json"

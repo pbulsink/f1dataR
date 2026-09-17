@@ -1,7 +1,7 @@
 #' Load Sprint Results
 #'
-#' Loads final race results for a given year and round. Note not all rounds have
-#' sprint results. Use `.load_sprint()` for an uncached version of this function.
+#' Loads final sprint race results for a given year and round. Note not all rounds have
+#' sprint results.
 #'
 #' @param season number from 2021 to current season  (defaults to current season).
 #' @param round number from 1 to 23 (depending on season), and defaults
@@ -9,9 +9,9 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang .data
 #' @export
-#' @return A dataframetibble with columns driver_id, constructor_id, points awarded, finishing position,
+#' @return A tibble with columns driver_id, constructor_id, points awarded, finishing position,
 #' grid position, laps completed, race status (finished or otherwise), gap to
-#' first place, fastest lap, fastest lap time, fastest lap in seconds,
+#' first place, fastest lap's lap number, fastest lap time, fastest lap in seconds,
 #' or NULL if no sprint exists for this season/round combo
 load_sprint <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 2021 || season > get_current_season())) {
@@ -64,7 +64,6 @@ load_sprint <- function(season = get_current_season(), round = "last") {
       "grid",
       "laps",
       "status",
-      "position",
       "gap" = "Time.time",
       "lap" = "FastestLap.lap",
       "fastest" = "FastestLap.Time.time"

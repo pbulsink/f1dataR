@@ -1,11 +1,10 @@
 #' Load Circuit Info
 #'
-#' @description Loads circuit info for all circuits in a given season. Use `.load_circuits()`
-#' for an uncached version of this function
+#' @description Loads circuit info for all circuits in a given season.
 #'
-#' @param season number from 1950 to current season (defaults to current season).
+#' @param season number from 1950 to current season, or `"current"` (defaults to current season).
 #' @export
-#' @return A tibble with one row per circuit
+#' @return A tibble with one row per circuit. Returns `NULL` on API failure.
 load_circuits <- function(season = get_current_season()) {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(

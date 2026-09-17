@@ -4,11 +4,11 @@
 #' Complete with a gearshift or speed analysis.
 #'
 #' @param season number from 2018 to current season (defaults to current season).
-#' @param race number from 1 to 23 (depending on season selected) and defaults
-#' to most recent.
-#' @param round number from 1 to 23 (depending on season selected) and defaults
-#' to most recent.
-#' @param session the code for the session to load Options are `'FP1'`, `'FP2'`, `'FP3'`,
+#' @param race `r lifecycle::badge("deprecated")` number from 1 to the number of rounds
+#' in the season (depending on season selected); use `round` instead.
+#' @param round number from 1 to the number of rounds in the season (depending on season
+#' selected) and defaults to `1`.
+#' @param session the code for the session to load. Options are `'FP1'`, `'FP2'`, `'FP3'`,
 #' `'Q'`, `'S'`, `'SS'`, `'SQ'`, and `'R'`. Default is `'R'`, which refers to Race.
 #' @param driver three letter driver code (see load_drivers() for a list) or name to be
 #' fuzzy matched to a driver from the session if FastF1 >= 3.4.0 is available.
@@ -16,8 +16,9 @@
 #' circuit. Choice of `'gear'` or `'speed'`, default `'gear'`.
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang .data
-#' @return A ggplot object that indicates grand prix, driver, time and selected
-#' color variable.
+#' @return A ggplot object showing the driver's fastest lap traced around the circuit,
+#' colored by the selected `color` variable (gear or speed), with a title/subtitle
+#' identifying the grand prix, driver and lap time. Returns `NULL` if the session fails to load.
 #' @export
 #' @examples
 #' # Plot Verstappen's fastest lap (speed) from Bahrain 2023:
@@ -39,6 +40,8 @@ plot_fastest <- function(
     )
   }
 
+  color <- match.arg(color, c("gear", "speed"))
+
   # Deprecation Check
   if (lifecycle::is_present(race)) {
     lifecycle::deprecate_stop(
@@ -53,7 +56,10 @@ plot_fastest <- function(
     "If the session has not been loaded yet, this could take a minute\n\n"
   )
 
-  if (get_fastf1_version() >= "3.4") {
+  check_ff1_version()
+  ff1_version <- get_fastf1_version()
+
+  if (!is.na(ff1_version) && ff1_version >= "3.4") {
     driver_abbreviation <- get_driver_abbreviation(
       driver,
       season = season,
@@ -94,11 +100,11 @@ plot_fastest <- function(
   if (is.null(season_drivers)) {
     # Jolpica is down
     lap_time <- ""
-    if (get_fastf1_version() < "3.4") {
+    if (is.na(ff1_version) || ff1_version < "3.4") {
       driver_name <- driver
     }
   } else {
-    if (get_fastf1_version() < "3.4") {
+    if (is.na(ff1_version) || ff1_version < "3.4") {
       driver_name <- season_drivers %>%
         dplyr::filter(.data$code == driver_abbreviation) %>%
         dplyr::select("given_name", "family_name") %>%
@@ -196,7 +202,9 @@ plot_fastest <- function(
 #'
 #' Note that this leaves the plot object on a dark background, any plot borders will be maintained
 #'
-#' @param trackplot A GGPlot object, ideally showing a track layout for ratio correction
+#' @param trackplot A ggplot object, ideally showing a track layout for ratio correction. Its
+#' inline `data` must contain numeric `x`/`y` columns (accessed as `trackplot$data$x`/`$y`) for
+#' the ratio correction to work.
 #' @param x,y Names of columns in the original data used for the plot's x and y values.
 #' Defaults to 'x' and 'y'
 #' @param background Background colour to use for filling out the plot edges. Defaults to
@@ -210,7 +218,7 @@ plot_fastest <- function(
 #' @examples
 #' \dontrun{
 #' # Note that plot_fastest plots have already been ratio corrected
-#' fast_plot <- plot_fastest(season = 2022, round = 1, session = "Q", driver = V)
+#' fast_plot <- plot_fastest(season = 2022, round = 1, session = "Q", driver = "VER")
 #' correct_track_ratio(fast_plot)
 #' }
 correct_track_ratio <- function(

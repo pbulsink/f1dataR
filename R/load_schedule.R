@@ -1,12 +1,12 @@
 #' Load Schedule
 #'
 #' @description Loads schedule information for a given F1 season.
-#' Use `.load_schedule()` for an uncached version.
 #'
 #' @param season number from 1950 to current season (defaults to current season). `'current'` also accepted.
 #' @importFrom magrittr "%>%"
 #' @export
-#' @return A tibble with one row per round in season. Indicates in sprint_date if a specific round has a sprint race
+#' @return A tibble with one row per round in season. Indicates in sprint_date if a specific round has a sprint race.
+#' Returns `NULL` on API failure.
 load_schedule <- function(season = get_current_season()) {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(

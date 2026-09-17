@@ -1,17 +1,17 @@
 #' Load Pitstop Data
 #'
 #' @description Loads pit stop info (number, lap, time elapsed) for a given race
-#' in a season. Pit stop data is available from 2012 onward.
-#' Call `.load_pitstops()` for an uncached version.
+#' in a season. Pit stop data is available from 2011 onward.
 #'
 #' @param season number from 2011 to current season (defaults to current season).
 #' @param round number from 1 to 23 (depending on season selected) and defaults
-#' to most recent.Also accepts `'last'`.
+#' to most recent. Also accepts `'last'`.
 #' @param race `r lifecycle::badge("deprecated")` `race` is no longer supported, please use `round`.
 #' @importFrom magrittr "%>%"
 #' @export
 #' @return A tibble with columns driver_id, lap, stop (number), time (of day),
-#' and stop duration
+#' and stop duration, or NULL if the request fails. Results are paginated automatically,
+#' so races with more than 100 pit stops are returned in full.
 load_pitstops <- function(
   season = get_current_season(),
   round = "last",

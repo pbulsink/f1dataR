@@ -11,11 +11,11 @@
 #'   color. Use `get_driver_style()` to develop a unique marker/linestyle for each driver in a team. Data is provided by
 #'   the python FastF1 package.
 #'
-#'   `get_driver_color_mapping()` and its alias `get_driver_colour_mapping()` return a data.frame of driver short-codes
+#'   `get_driver_color_map()` and its alias `get_driver_colour_map()` return a data.frame of driver short-codes
 #'   and their hexidecimal colour. Like `get_driver_color()`, both drivers on a team will get the same colour returned.
 #'   Data is provided by the python FastF1 package. Requires provision of a specific race event (season/round/session).
 #'
-#'   `get_team_color()` and its alias `get_team_colour()` return a hexidecimal RGB colour code for a a team at a given
+#'   `get_team_color()` and its alias `get_team_colour()` return a hexidecimal RGB colour code for a team at a given
 #'   season & race. Data is provided by the python FastF1 package.
 #'
 #' @param season A season corresponding to the race being referenced for collecting colour/style. Should be a number
@@ -40,7 +40,7 @@
 #'   get_driver_style(driver = "LEC")
 #'
 #'   # Get all driver abbreviations and colors quickly:
-#'   get_driver_color_mapping(season = 2023, round = "Montreal", session = "R")
+#'   get_driver_color_map(season = 2023, round = "Montreal", session = "R")
 #'
 #'   get_team_color(team = "Alpine", season = 2023, round = 1)
 #' }
@@ -254,7 +254,7 @@ get_driver_colour_map <- function(
 #'
 #' @return
 #' for `get_session_drivers_and_teams()` a data.frame,
-#' for `get_drivers_by_team()` a unnamed character vector with all drivers for the requested team,
+#' for `get_drivers_by_team()` an unnamed character vector with all drivers for the requested team,
 #' for all other functions a character result with the requested value.
 #'
 NULL
@@ -550,8 +550,8 @@ get_tire_compounds <- function(season = get_current_season()) {
 #' @description This preps a `fastf1.get_session()` python call and returns invisibly the python environment
 #'
 #' @param season number from 2018 to current season. Defaults to current season.
-#' @param round number from 1 to 23 (depending on season selected) and defaults
-#' to most recent. Also accepts race name.
+#' @param round number from 1 to the number of rounds in the season and defaults
+#' to 1. Also accepts race name.
 #' @param session the code for the session to load. Options are `'FP1'`, `'FP2'`, `'FP3'`,
 #' `'Q'`, `'S'`, `'SS'`,`'SQ'`, and `'R'`. Default is `'R'`, which refers to Race.
 #'
@@ -593,16 +593,18 @@ get_session <- function(
   )
   if (is.numeric(round)) {
     py_string <- glue::glue(
-      "{py_string}{round}, 'R')",
+      "{py_string}{round}, '{session}')",
       py_string = py_string,
-      round = round
+      round = round,
+      session = session
     )
   } else {
     # Character race, so need quotes around it
     py_string <- glue::glue(
-      "{py_string}'{round}', 'R')",
+      "{py_string}'{round}', '{session}')",
       py_string = py_string,
-      round = round
+      round = round,
+      session = session
     )
   }
   tryCatch(

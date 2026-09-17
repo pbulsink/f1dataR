@@ -7,8 +7,8 @@
 #' to one data frame by the user.
 #'
 #' @param season number from 2018 to current season (defaults to current season).
-#' @param round number from 1 to 23 (depending on season selected). Also accepts race name.
-#' @param session the code for the session to load Options are `'FP1'`, `'FP2'`, `'FP3'`,
+#' @param round number from 1 to the number of rounds in the season. Also accepts race name.
+#' @param session the code for the session to load. Options are `'FP1'`, `'FP2'`, `'FP3'`,
 #' `'Q'`, `'S'`, `'SS'`, `'SQ'`, and `'R'`. Default is `'R'`, which refers to Race.
 #' @param driver three letter driver code (see `load_drivers()` for a list)
 #' @param laps which lap's telemetry to return. One of an integer lap number (<= total laps in the race), `fastest`,
@@ -19,7 +19,9 @@
 #' @param fastest_only `r lifecycle::badge("deprecated")` `fastest_only` is no longer supported, indicated preferred
 #' laps in `laps`.
 #' @importFrom magrittr "%>%"
-#' @return A tibble with telemetry data for selected driver/session.
+#' @return A tibble with telemetry data for selected driver/session. Returns `NULL`
+#' if the session fails to load. Otherwise, returns a tibble whose columns depend on
+#' the FastF1 telemetry data available for the session/driver.
 #' @import reticulate
 #' @export
 #' @examples
