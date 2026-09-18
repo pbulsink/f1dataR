@@ -63,7 +63,7 @@ Data is pulled from:
 * [Jolpica F1 API](https://api.jolpi.ca/ergast/)
 * [F1 Data Stream](https://www.formula1.com/en/timing/f1-live) via the [Fast F1 python library](https://docs.fastf1.dev/index.html)
 
-Note the Ergast Motor Racing Database API will be shutting down at the end of 2024. A new data source (Jolpica-F1 project) was identified and implemented.
+Note the Ergast Motor Racing Database API was shut down at the end of 2024. A new data source (Jolpica-F1 project) was identified and implemented.
 
 ## Functions
 
@@ -154,7 +154,7 @@ Many other functions exist, and are flexible enough to call the current `season`
 * `load_pitstops(season = "current", round = "last")`
 * `load_quali(season = "current", round = "last")`
 * `load_results(season = "current", round = "last")`
-* `load_schedule(season = `r get_current_season()`)`
+* `` `load_schedule(season = `r get_current_season()`)` ``
 * `load_sprint(season = "current", round = "last")`
 * `load_standings(season = "current", round = "last", type = c("driver", "constructor"))`
 

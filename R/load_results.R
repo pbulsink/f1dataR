@@ -12,7 +12,10 @@
 #'   leader (or time of race), fastest lap ranking, drivers' fastest lap time, top speed achieved, and fastest lap time
 #'   in seconds, or NULL if the request fails. `gap` is a string like `"m:ss.ttt"` giving the gap to the leader, or
 #'   the leader's total race time for the race winner. For races without fastest-lap data (races before 2004, and
-#'   2021 round 12), `fastest_rank`, `fastest`, `top_speed_kph`, and `time_sec` will be `NA`.
+#'   2021 round 12), `fastest_rank`, `fastest`, `top_speed_kph`, and `time_sec` will be `NA`. Note that `points`,
+#'   `position`, `grid`, and `laps` are returned by the API as strings and are therefore all **character** columns,
+#'   not numeric, even though they look numeric (e.g. `position` can also be non-numeric text such as `"R"` for a
+#'   retirement). Coerce with `as.numeric()` if a numeric type is required.
 load_results <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(

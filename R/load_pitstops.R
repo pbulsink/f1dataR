@@ -4,14 +4,16 @@
 #' in a season. Pit stop data is available from 2011 onward.
 #'
 #' @param season number from 2011 to current season (defaults to current season).
-#' @param round number from 1 to 23 (depending on season selected) and defaults
+#' @param round number from 1 to the number of rounds in the season, and defaults
 #' to most recent. Also accepts `'last'`.
 #' @param race `r lifecycle::badge("deprecated")` `race` is no longer supported, please use `round`.
 #' @importFrom magrittr "%>%"
 #' @export
 #' @return A tibble with columns driver_id, lap, stop (number), time (of day),
 #' and stop duration, or NULL if the request fails. Results are paginated automatically,
-#' so races with more than 100 pit stops are returned in full.
+#' so races with more than 100 pit stops are returned in full. Note that `lap`, `stop`,
+#' and `duration` are returned by the API as strings and are therefore all **character**
+#' columns, not numeric.
 load_pitstops <- function(
   season = get_current_season(),
   round = "last",

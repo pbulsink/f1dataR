@@ -85,3 +85,12 @@ for practice rookies, they typically participate in \code{session = FP1}.
 
 \code{get_session_drivers_and_teams()} returns a data frame of all drivers and their team for a provided session.
 }
+\details{
+Driver identity is represented inconsistently across the package, reflecting the two upstream
+data sources: Jolpica loaders (e.g. \code{load_drivers()}, \code{load_results()}) use \code{driver_id}, a lower_snake_case
+slug (e.g. \code{"max_verstappen"}) that is stable across seasons, and \code{code}, a 3-letter code assigned by the
+API (not available for all drivers/seasons). FastF1-backed functions in this file instead take a fuzzy-matched
+\code{driver}/\code{driver_name} string (full name, surname, or 3-letter abbreviation all work) and return/report
+\code{abbreviation}, FastF1's own 3-letter driver code for that season. \code{code} and \code{abbreviation} are usually,
+but not guaranteed to be, identical for the same driver.
+}

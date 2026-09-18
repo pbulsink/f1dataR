@@ -282,7 +282,7 @@ check_ff1_network_connection <- function(path = NA_character_) {
 #'
 #' @description
 #' This function checks the version of `FastF1` and ensures it's at or above the minimum supported version for
-#' `f1dataR` (currently requires 3.1.0 or better).
+#' `f1dataR` (currently requires 3.4.0 or better).
 #'
 #' This function is a light wrapper around get_fastf1_version()
 #'
@@ -298,20 +298,13 @@ check_ff1_version <- function() {
     ))
     return(invisible(NA))
   }
-  if (version < "3.1") {
+  if (version < "3.4") {
     cli::cli_abort(c(
-      "An old version of {.pkg FastF1} is in use. {.pkg f1dataR} requires {.pkg FastF1} version 3.1.0 or newer.",
-      x = "Support for older {.pkg FastF1} versions was removed in {.pkg f1dataR} v1.6.0"
+      "An old version of {.pkg FastF1} is in use. {.pkg f1dataR} requires {.pkg FastF1} version 3.4.0 or newer.",
+      x = "Support for older {.pkg FastF1} versions was removed in {.pkg f1dataR} v2.1.0"
     ))
-  } else if (version < "3.4") {
-    cli::cli_warn(c(
-      "An old version of {.pkg FastF1} is in use. {.pkg f1dataR} requires {.pkg FastF1} version 3.4.0 or newer for some functions.",
-      x = "Support for older {.pkg FastF1} versions may be removed soon."
-    ))
-    invisible(TRUE)
-  } else {
-    invisible(TRUE)
   }
+  invisible(TRUE)
 }
 
 

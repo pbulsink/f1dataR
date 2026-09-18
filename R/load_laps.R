@@ -12,6 +12,9 @@
 #' @return A tibble with columns driver_id (unique and recurring), position
 #' during lap (character), time (in clock form, `time`), lap number (`lap`, taken from the API's
 #' `number` field), time in seconds (`time_sec`), and season. Returns `NULL` on API failure.
+#' Note that `season` is numeric when the caller passed a numeric `season` or `"current"`, but
+#' will be character if a character `season` string (e.g. `"2021"`) was passed in, since the
+#' original argument is echoed back rather than coerced.
 load_laps <- function(
   season = get_current_season(),
   round = "last",

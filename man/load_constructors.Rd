@@ -7,7 +7,8 @@
 load_constructors()
 }
 \value{
-A tibble with one row per constructor. Returns \code{NULL} on API failure.
+A tibble with one row per constructor, with columns \code{constructor_id}, \code{name},
+and \code{nationality} (all character). Returns \code{NULL} on API failure.
 }
 \description{
 Loads info for all constructors that have ever participated in Formula 1.

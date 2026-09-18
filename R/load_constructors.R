@@ -4,7 +4,8 @@
 #'
 #' @importFrom magrittr "%>%"
 #' @export
-#' @return A tibble with one row per constructor. Returns `NULL` on API failure.
+#' @return A tibble with one row per constructor, with columns `constructor_id`, `name`,
+#' and `nationality` (all character). Returns `NULL` on API failure.
 load_constructors <- function() {
   lim <- 100
   url <- "constructors.json"
@@ -37,6 +38,7 @@ load_constructors <- function() {
   return(
     full %>%
       dplyr::select("constructorId", "name", "nationality") %>%
+      tibble::as_tibble() %>%
       janitor::clean_names()
   )
 }

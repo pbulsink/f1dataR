@@ -13,7 +13,7 @@ load_pitstops(
 \arguments{
 \item{season}{number from 2011 to current season (defaults to current season).}
 
-\item{round}{number from 1 to 23 (depending on season selected) and defaults
+\item{round}{number from 1 to the number of rounds in the season, and defaults
 to most recent. Also accepts \code{'last'}.}
 
 \item{race}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} \code{race} is no longer supported, please use \code{round}.}
@@ -21,7 +21,9 @@ to most recent. Also accepts \code{'last'}.}
 \value{
 A tibble with columns driver_id, lap, stop (number), time (of day),
 and stop duration, or NULL if the request fails. Results are paginated automatically,
-so races with more than 100 pit stops are returned in full.
+so races with more than 100 pit stops are returned in full. Note that \code{lap}, \code{stop},
+and \code{duration} are returned by the API as strings and are therefore all \strong{character}
+columns, not numeric.
 }
 \description{
 Loads pit stop info (number, lap, time elapsed) for a given race

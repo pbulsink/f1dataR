@@ -7,7 +7,10 @@
 #' @export
 #' @return A tibble with columns `driver_id` (unique and recurring), `given_name`,
 #' `family_name`, `nationality`, `date_of_birth` (yyyy-mm-dd format), `code` (driver code), and
-#' `permanent_number` (for post-2014 drivers). Returns `NULL` on API failure.
+#' `permanent_number` (for post-2014 drivers). Returns `NULL` on API failure. Note that
+#' `permanent_number` is returned by the API as a **character** column when present (and is
+#' `NA_integer_` when absent for a given driver), so its type is not stable across seasons;
+#' coerce with `as.integer()` if a consistent numeric type is required.
 load_drivers <- function(season = get_current_season()) {
   if (season != "current" && (season < 1950 || season > get_current_season())) {
     cli::cli_abort(

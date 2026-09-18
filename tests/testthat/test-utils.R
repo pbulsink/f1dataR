@@ -80,17 +80,13 @@ test_that("utility functions work", {
 })
 
 test_that("check_ff1_version returns invisible(TRUE) on all non-error paths", {
-  # Regression test: the 3.1 <= version < 3.4 branch used to return the
-  # value of cli::cli_warn() instead of invisible(TRUE).
   testthat::local_mocked_bindings(
     get_fastf1_version = function() package_version("3.2.0")
   )
-  expect_warning(
-    result <- withVisible(check_ff1_version()),
+  expect_error(
+    check_ff1_version(),
     "FastF1"
   )
-  expect_true(result$value)
-  expect_false(result$visible)
 
   testthat::local_mocked_bindings(
     get_fastf1_version = function() package_version("3.8.0")

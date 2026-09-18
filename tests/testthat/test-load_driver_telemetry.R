@@ -16,7 +16,7 @@ test_that("driver telemetry", {
   # Tests
   # Ensure failure if old ff1, then skip
   ff1_ver <- get_fastf1_version()
-  if (ff1_ver < "3.1") {
+  if (ff1_ver < "3.4") {
     expect_error(
       telem <- load_driver_telemetry(
         season = 2023,
@@ -128,7 +128,7 @@ test_that("Load Driver Telemetry works without internet", {
   withr::local_options(f1dataR.cache = file.path(tempdir(), "tst_telem2"))
 
   ff1_ver <- get_fastf1_version()
-  if (ff1_ver < "3.1") {
+  if (ff1_ver < "3.4") {
     skip(
       "Skipping load_driver_telemetry (no internet) test as FastF1 is out of date."
     )

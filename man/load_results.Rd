@@ -17,7 +17,10 @@ the race, their finishing position, their starting (grid) position, number of co
 leader (or time of race), fastest lap ranking, drivers' fastest lap time, top speed achieved, and fastest lap time
 in seconds, or NULL if the request fails. \code{gap} is a string like \code{"m:ss.ttt"} giving the gap to the leader, or
 the leader's total race time for the race winner. For races without fastest-lap data (races before 2004, and
-2021 round 12), \code{fastest_rank}, \code{fastest}, \code{top_speed_kph}, and \code{time_sec} will be \code{NA}.
+2021 round 12), \code{fastest_rank}, \code{fastest}, \code{top_speed_kph}, and \code{time_sec} will be \code{NA}. Note that \code{points},
+\code{position}, \code{grid}, and \code{laps} are returned by the API as strings and are therefore all \strong{character} columns,
+not numeric, even though they look numeric (e.g. \code{position} can also be non-numeric text such as \code{"R"} for a
+retirement). Coerce with \code{as.numeric()} if a numeric type is required.
 }
 \description{
 Loads final race results for a given year and round.

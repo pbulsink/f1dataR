@@ -22,6 +22,9 @@ to most recent.  Also accepts \code{'last'}.}
 A tibble with columns driver_id (unique and recurring), position
 during lap (character), time (in clock form, \code{time}), lap number (\code{lap}, taken from the API's
 \code{number} field), time in seconds (\code{time_sec}), and season. Returns \code{NULL} on API failure.
+Note that \code{season} is numeric when the caller passed a numeric \code{season} or \code{"current"}, but
+will be character if a character \code{season} string (e.g. \code{"2021"}) was passed in, since the
+original argument is echoed back rather than coerced.
 }
 \description{
 Loads basic lap-by-lap time data for all drivers in a given season

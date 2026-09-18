@@ -249,6 +249,14 @@ get_driver_colour_map <- function(
 #'
 #' `get_session_drivers_and_teams()` returns a data frame of all drivers and their team for a provided session.
 #'
+#' @details Driver identity is represented inconsistently across the package, reflecting the two upstream
+#' data sources: Jolpica loaders (e.g. `load_drivers()`, `load_results()`) use `driver_id`, a lower_snake_case
+#' slug (e.g. `"max_verstappen"`) that is stable across seasons, and `code`, a 3-letter code assigned by the
+#' API (not available for all drivers/seasons). FastF1-backed functions in this file instead take a fuzzy-matched
+#' `driver`/`driver_name` string (full name, surname, or 3-letter abbreviation all work) and return/report
+#' `abbreviation`, FastF1's own 3-letter driver code for that season. `code` and `abbreviation` are usually,
+#' but not guaranteed to be, identical for the same driver.
+#'
 #' @param season The season for which the look-up should occur. Should be a number from 2018 to current season.
 #' Defaults to current season.
 #'
@@ -568,11 +576,6 @@ get_session <- function(
   if (is.na(ff1_version)) {
     cli::cli_abort(
       "{.pkg fastf1} Python package is not installed or its version could not be determined."
-    )
-  }
-  if (ff1_version < "3.4") {
-    cli::cli_abort(
-      "This function requires FastF1 version 3.4.0 or later"
     )
   }
 

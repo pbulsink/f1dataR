@@ -3,8 +3,8 @@
 #' Loads final sprint race results for a given year and round. Note not all rounds have
 #' sprint results.
 #'
-#' @param season number from 2021 to current season  (defaults to current season).
-#' @param round number from 1 to 23 (depending on season), and defaults
+#' @param season number from 2021 to current season (or the word 'current') (defaults to current season).
+#' @param round number from 1 to the number of rounds in the season, and defaults
 #' to most recent. Also accepts `'last'`.
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang .data
@@ -13,7 +13,9 @@
 #' grid position, laps completed, race status (finished or otherwise), gap to
 #' first place, fastest lap's lap number, fastest lap time, fastest lap in seconds,
 #' or NULL if no sprint exists for this season/round combo. Results are paginated
-#' automatically, so sprints with more than 100 results are returned in full.
+#' automatically, so sprints with more than 100 results are returned in full. Note that
+#' `points`, `position`, `grid`, and `laps` are returned by the API as strings and are
+#' therefore all **character** columns, not numeric.
 load_sprint <- function(season = get_current_season(), round = "last") {
   if (season != "current" && (season < 2021 || season > get_current_season())) {
     cli::cli_abort(

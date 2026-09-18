@@ -4,7 +4,7 @@
 #' constructors' championships.
 #'
 #' @param season number from 2003 to current season (or the word 'current') (defaults to current season).
-#' @param round number from 1 to 23 (depending on season), and defaults
+#' @param round number from 1 to the number of rounds in the season, and defaults
 #' to most recent. Also accepts `'last'`.
 #' @param type select `'driver'` or `'constructor'` championship data. Defaults to
 #' `'driver'`
@@ -12,6 +12,10 @@
 #' @export
 #' @return A tibble with columns driver_id (or constructor_id), position,
 #' points, wins (and constructor_id in the case of drivers championship), or NULL if the request fails.
+#' `position`, `points`, and `wins` are returned by the API as strings and are therefore all
+#' **character** columns, not numeric. For the drivers' championship, a driver who raced for more
+#' than one constructor in the season will appear as multiple rows (one per constructor), since the
+#' underlying `Constructors` field is unnested.
 load_standings <- function(
   season = get_current_season(),
   round = "last",
